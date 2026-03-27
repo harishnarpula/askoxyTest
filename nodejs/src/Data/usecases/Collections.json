@@ -1,0 +1,473 @@
+{
+  "domain": "Collections",
+  "modules": [
+    {
+      "moduleName": "Loan Origination System",
+      "useCases": [
+        {
+          "useCaseId": "UC_ALLOCATION_OF_DELINQUENT_CASES_ALLOCATIONL_HOLD",
+          "name": "Allocation Hold For Delinquent Cases",
+          "module": "Delinquent Case Management",
+          "actors": ["User (Supervisor)"],
+          "preConditions": [
+            "Delinquent cases are classified and mapped to the communication templates for auto communication."
+          ],
+          "postConditions": [
+            "Delinquent case is not allotted and kept on hold."
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Extracts the list of delinquent cases by providing details such as Loan No./Account No, Customer Name, Customer ID, Card No., Overdue position, Financier, Financier Type (Line of business), Rule Unit Code, Unit Level, Product type, Product, Queue, Branch"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Allocates, re-allocates, or holds the delinquent cases"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Keeps delinquent cases on hold to prevent reallocation despite satisfying conditions"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_ALLOCATION_OF_DELINQUENT_CASES_DEFINE_ALLOCATION",
+          "name": "Define Allocation For Delinquent Customers",
+          "module": "Collections System",
+          "actors": ["User"],
+          "preConditions": [
+            "Delinquent cases are classified and mapped to the communication templates for auto communication.",
+            "System should allow to do the modifications in existing allocations"
+          ],
+          "postConditions": ["Delinquent case is assigned to Collector."],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Defines the rules in allocation and prepares the delinquent case"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Maps the delinquent case to the Collector providing strategy, financier, financier type, queue code, rule code, rule unit level, rule unit code, unit level, unit code, percentage allocation, execution sequence, maker ID, and making date"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Provides the percentage of allocation and specifies the priority"
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Saves the details in the system for future reference"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_ALLOCATION_OF_DELINQUENT_CASES_MANUAL_ALLOCATION",
+          "name": "Manual Allocation For Delinquent Customers",
+          "module": "Delinquent Case Management",
+          "actors": ["User"],
+          "preConditions": ["The allocations would have already been defined."],
+          "postConditions": ["Delinquent cases are assigned to Collector."],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Defines the rules in allocation and maps the queue with the allocation rule."
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Allots the delinquent case to the Collector providing details such as Loan No., Customer Name, Customer ID, Card No., Days past Due, Financier, Financier Type, Rule Unit Code, Unit Level, Product type, Product, Queue, Branch."
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Selects the Unit level and Unit code as bulk or selective manual allocation for cases not allotted to any collector in the past."
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Selects the delinquent cases from the list and allocates them to the collector based on percentage of allocation and priority."
+            },
+            {
+              "step": 5,
+              "actor": "User",
+              "action": "Saves the manual allocation made in the system for future reference."
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_ALLOCATION_OF_DELINQUENT_CASES_MANUAL_REALLOCATION",
+          "name": "Manual Reallocation For Delinquent Customers",
+          "module": "Collections System",
+          "actors": ["User (Supervisor)"],
+          "preConditions": [
+            "Delinquent cases are classified and mapped to the communication templates for auto communication",
+            "Case allocation had to be completed"
+          ],
+          "postConditions": [
+            "Delinquent case is Re-assigned to other Collector who can handle more effectively than the existing collector"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "System",
+              "action": "Displays delinquent cases based on the queue defined"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Updates details before re-assigning to new collector if required (Loan No./Account No, Customer Name, Customer ID, Card No., Overdue position, Financier, Financier Type, Rule Unit Code, Unit Level, Product type, Product, Queue, Branch)"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Selects delinquent cases and assigns to new collector who handles cases more efficiently and reports to him"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_BEGINNING_OF_DAY_PROCESS",
+          "name": "Beginning of Day Process",
+          "module": "Collections System",
+          "actors": ["User"],
+          "preConditions": [
+            "Details of delinquent and non delinquent customers should be available in database."
+          ],
+          "postConditions": [
+            "System shows the details of delinquent, non delinquent customers and user views the same."
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Opens the Collections management application and navigates to BOD process."
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Enters the line of business (Credit card/ Over draft/ Finance) and initiates the process for BOD."
+            },
+            {
+              "step": 3,
+              "actor": "System",
+              "action": "Displays details of delinquent customers including total loan amount, outstanding loan amount, customer/co-applicant/guarantor details, due date, due amount, and customer contact details."
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Checks the displayed delinquent customers data and proceeds for classification of delinquent cases."
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_CLASSIFICATION_OF_DELINQUENT_CASES___DEFINE_QUEUE",
+          "name": "Defining a Queue",
+          "module": "Collections System",
+          "actors": ["User"],
+          "preConditions": [
+            "BOD process completed",
+            "Availability of delinquent and non delinquent customers details in database"
+          ],
+          "postConditions": ["Map the Classification rule to Queue"],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Defines the rules in allocation and prepares the delinquent case"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Defines the Queue by providing Strategy, Financier, Financier Type, Queue Code, Rule Code, Severity, Execution Sequence, Maker ID, and Making Date"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Maps the queue with the classification rule with a product and financier"
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Provides the Queue description"
+            },
+            {
+              "step": 5,
+              "actor": "User",
+              "action": "Saves the details in the system for future reference"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_CONTACT_RECORDING",
+          "name": "Contact recording",
+          "module": "Collections",
+          "actors": ["User", "Supervisor"],
+          "preConditions": [
+            "Delinquent cases should be saved in Database.",
+            "System should allow Supervisor to prioritize and allocate the cases to collector.",
+            "System should allow user to record details of the follow-up action."
+          ],
+          "postConditions": ["Action details are saved in system."],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Supervisor",
+              "action": "Defines priority for cases based on Amount Overdue Method and allocates cases to collector"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Initiates follow-up process after allocation completion"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Opens customer details page and views delinquent customer details"
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Checks customer details and contacts delinquent customer using appropriate curing action"
+            },
+            {
+              "step": 5,
+              "actor": "User",
+              "action": "Records follow-up action and remarks in system"
+            },
+            {
+              "step": 6,
+              "actor": "User",
+              "action": "Inputs follow-up details including action date, start time, action type, contact mode, person contacted, place contacted, next action date/time, reminder mode, contacted by, and remarks"
+            },
+            {
+              "step": 7,
+              "actor": "User",
+              "action": "Submits follow-up details to save in system and proceeds with further process"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_LEGAL_COLLECTIONS_WORKFLOW",
+          "name": "Legal Collections workflow",
+          "module": "Legal Module",
+          "actors": ["User", "Supervisor", "Lawyer"],
+          "preConditions": ["Client should be delinquent customer."],
+          "postConditions": [
+            "Records the details of the court proceedings and updates in Collections management application."
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Sends the delinquent customer documents to legal collection process team and marks for Legal Collection in Collections management application."
+            },
+            {
+              "step": 2,
+              "actor": "Supervisor",
+              "action": "Allocates the case to concerned lawyer depending upon the delinquent customer."
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Sends the legal notice to customer with the help of lawyer."
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Files the cases against delinquent customer."
+            },
+            {
+              "step": 5,
+              "actor": "User",
+              "action": "Presents documents and evidences against the customer to the court."
+            },
+            {
+              "step": 6,
+              "actor": "User",
+              "action": "Records the details of the court proceedings and updates the verdicts pronounced by the court in Collections management application."
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_PRIORITIZING_A_QUEUE",
+          "name": "Prioritizing a Queue",
+          "module": "Collections System",
+          "actors": ["User"],
+          "preConditions": [
+            "BOD process completed",
+            "Availability of delinquent and non delinquent customers details in database",
+            "Mapping of Classification rule to Queue should be done"
+          ],
+          "postConditions": [
+            "Prioritized the queue to set the priority of the various queues defined"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Defines the queue by mapping the classification rule with a product and financier"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Sets the priority of the various queues defined"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Defines the Prioritize Queue by providing Strategy, Financier, Financier Type, Queue Code, and Making Date"
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Provides the Execution sequence to set the priority of the various queues"
+            },
+            {
+              "step": 5,
+              "actor": "User",
+              "action": "Saves the details in the system for future reference"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_QUEUE_COMMUNICATION_MAPPING",
+          "name": "Queue communication mapping",
+          "module": "Collections System",
+          "actors": ["User"],
+          "preConditions": [
+            "BOD process completed",
+            "Availability of delinquent and non delinquent customers details in database",
+            "Mapping of Classification and curing action should be initiated"
+          ],
+          "postConditions": [
+            "System communicates to the customer against the curing action"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Defines the queue by mapping the classification rule with a product and financier"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Sets the priority of the various queues defined"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Specifies the various curing actions for mapping to the communication template"
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Maps the queue with communication template manually"
+            },
+            {
+              "step": 5,
+              "actor": "System",
+              "action": "Automatically communicates to the customer on the basis of the curing action selected"
+            },
+            {
+              "step": 6,
+              "actor": "User",
+              "action": "Saves the details in the system for future reference"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_QUEUE_CURING",
+          "name": "Queue Curing",
+          "module": "Collections System",
+          "actors": ["User"],
+          "preConditions": [
+            "BOD process completed",
+            "Availability of delinquent and non delinquent customers details in database",
+            "Mapping of Classification rule to Queue should be done"
+          ],
+          "postConditions": [
+            "Specifies the curing action that is to be used for the follow-up action on the cases associated with that queue"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User",
+              "action": "Defines the queue by mapping the classification rule with a product and financier"
+            },
+            {
+              "step": 2,
+              "actor": "User",
+              "action": "Sets the priority of the various queues defined"
+            },
+            {
+              "step": 3,
+              "actor": "User",
+              "action": "Specifies the curing actions by providing strategy, financier, financier type, queue code, and making date"
+            },
+            {
+              "step": 4,
+              "actor": "User",
+              "action": "Specifies curing actions such as letter generation, SMS sending, stat card, tele calling, and email"
+            },
+            {
+              "step": 5,
+              "actor": "User",
+              "action": "Uses the curing action for the follow-up action on the cases associated with that queue"
+            },
+            {
+              "step": 6,
+              "actor": "User",
+              "action": "Saves the details in the system for future reference"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_PLAN",
+          "name": "Work Plan",
+          "module": "Work List Management",
+          "actors": ["Supervisor", "Collector", "Tele-caller"],
+          "preConditions": [
+            "Delinquent cases should be saved in Database.",
+            "System should allow Supervisor to prioritize and allocate the cases to collector"
+          ],
+          "postConditions": [
+            "Delinquent cases allocated to collector for follow-up"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Supervisor",
+              "action": "Completes the allocation process for delinquent customers"
+            },
+            {
+              "step": 2,
+              "actor": "Supervisor",
+              "action": "Initiates the process for Work Plan"
+            },
+            {
+              "step": 3,
+              "actor": "System",
+              "action": "Displays work plan page with loan account details, customer name, financier type, product, amount overdue, principal outstanding, late fee, installment overdue, and remarks"
+            },
+            {
+              "step": 4,
+              "actor": "Supervisor",
+              "action": "Checks the details and defines priority based on amount overdue"
+            },
+            {
+              "step": 5,
+              "actor": "Supervisor",
+              "action": "Allocates cases to collector for follow-up"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

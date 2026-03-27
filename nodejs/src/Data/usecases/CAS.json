@@ -1,0 +1,653 @@
+{
+  "domain": "CAS",
+  "modules": [
+    {
+      "moduleName": "Loan Origination System",
+      "useCases": [
+        {
+          "useCaseId": "UC_CUSTOMER_ID_CREATION",
+          "name": "LOS Customer Creation",
+          "module": "Loan Origination System",
+          "actors": ["Customer", "Bank Officer"],
+          "preConditions": [
+            "Receipt of filled in Loan Application & required documents from the Customer"
+          ],
+          "postConditions": [
+            "Customer ID created & Bank Officer can capture the loan details as requested by the customer in the LOS"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Customer",
+              "action": "Walks into the Bank Branch or interacts with the Bank officer & enquires about the process for obtaining the loan from the Bank"
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Enquires the purpose of the Loan, Financial details of the customer & briefs the customer about the loan product features & the required documents"
+            },
+            {
+              "step": 3,
+              "actor": "Customer",
+              "action": "Submits the filled in Loan application form along with the required documents"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Verifies the documents submitted by the customer with the check list & if any discrepancy requests the customer for providing the details in the application or submission of the valid documents"
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Once convinced with the application form & documents issues an acknowledgement to the customer & initiates the Customer Creation Process"
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Captures the customer details such as Personal Details, Communication Details, and Employment & Income details in LOS for Customer ID Creation"
+            },
+            {
+              "step": 7,
+              "actor": "Bank Officer",
+              "action": "Saves the record for Customer ID creation"
+            },
+            {
+              "step": 8,
+              "actor": "System",
+              "action": "Creates Customer ID"
+            },
+            {
+              "step": 9,
+              "actor": "Bank Officer",
+              "action": "Can capture the loan details requested by the customer in LOS to proceed further"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_LINKING_OF_CO_APPLICANT_GUARANTOR",
+          "name": "Linking of Co-Applicant/Co-Obligant/Guarantor",
+          "module": "Loan Origination System",
+          "actors": ["User (Bank Officer)"],
+          "preConditions": [
+            "Customer ID and Linking of Customer ID to Loan Product has already been done.",
+            "All the concerned documents pertaining to the proposed loan account are submitted by the customer."
+          ],
+          "postConditions": [
+            "Updation of particulars regarding the Co-applicant / Co-obligant / Guarantor for the proposed loan.",
+            "Creation of the Customer ID\u2019s for Co-applicant / Co-obligant / Guarantor is created."
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Customer",
+              "action": "Submits the filled loan application form along with the required documents"
+            },
+            {
+              "step": 2,
+              "actor": "User (Bank Officer)",
+              "action": "Verifies the documents submitted by the customer with the checklist and requests for valid documents if discrepancies are found"
+            },
+            {
+              "step": 3,
+              "actor": "User (Bank Officer)",
+              "action": "Issues acknowledgement to the customer and initiates the Customer Creation Process after verification"
+            },
+            {
+              "step": 4,
+              "actor": "User (Bank Officer)",
+              "action": "Captures customer personal, communication, employment, and income details and links them in LOS for Customer ID creation"
+            },
+            {
+              "step": 5,
+              "actor": "User (Bank Officer)",
+              "action": "Links the Customer ID to the proposed loan product and related asset details"
+            },
+            {
+              "step": 6,
+              "actor": "User (Bank Officer)",
+              "action": "Creates Customer IDs for Co-applicant(s), Co-obligant(s), and Guarantor(s) capturing detailed personal, communication, employment, income and expenses information"
+            },
+            {
+              "step": 7,
+              "actor": "User (Bank Officer)",
+              "action": "Captures assets and liabilities position of the Co-applicant, Co-obligant, or Guarantor to determine net worth"
+            },
+            {
+              "step": 8,
+              "actor": "User (Bank Officer)",
+              "action": "Saves the record for creation of Customer IDs for Co-applicant, Co-obligant, and Guarantor"
+            },
+            {
+              "step": 9,
+              "actor": "User (Bank Officer)",
+              "action": "Initiates linking of Co-applicant, Co-obligant, or Guarantor details with the applicant loan application"
+            },
+            {
+              "step": 10,
+              "actor": "User (Bank Officer)",
+              "action": "Selects or enters applicant type, customer ID, name, relationship, income inclusion, and remarks to link co-parties to the loan application"
+            },
+            {
+              "step": 11,
+              "actor": "User (Bank Officer)",
+              "action": "Saves the record and adds the Co-applicant, Co-obligant, or Guarantor details to the loan application"
+            },
+            {
+              "step": 12,
+              "actor": "User (Bank Officer)",
+              "action": "Proceeds to capture further loan details requested by the customer in LOS"
+            },
+            {
+              "step": 13,
+              "actor": "User (Bank Officer)",
+              "action": "Fetches details from existing customer IDs from CBS if Co-applicant, Co-obligant, or Guarantor are existing bank customers"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_LINKING_OF_CUSTOMER_ID_TO_LOAN",
+          "name": "Linking of Customer ID to Loan Product",
+          "module": "Loan Origination System",
+          "actors": ["User (Bank Officer)"],
+          "preConditions": [
+            "Customer ID has already been created",
+            "All concerned documents pertaining to the proposed loan account are submitted by the customer"
+          ],
+          "postConditions": [
+            "The Customer ID is linked to a particular Loan account",
+            "Updation of particulars of the proposed Asset pertaining to the proposed loan"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "User (Bank Officer)",
+              "action": "Initiates process to link Customer ID to a particular loan product"
+            },
+            {
+              "step": 2,
+              "actor": "User (Bank Officer)",
+              "action": "Checks the loan application details for purpose of the loan requested by the customer"
+            },
+            {
+              "step": 3,
+              "actor": "User (Bank Officer)",
+              "action": "Selects the loan product to be linked to the Customer ID in LOS"
+            },
+            {
+              "step": 4,
+              "actor": "User (Bank Officer)",
+              "action": "Enters loan details in LOS including Loan Amount, Project Cost, Interest Type, Interest Rate, Initial Holiday Period, Loan Period, Installment Periodicity, Margin % required, Margin offered, and Purpose of Loan"
+            },
+            {
+              "step": 5,
+              "actor": "User (Bank Officer)",
+              "action": "Provides a brief description taking into account Income & Expenditure, Repayment Capacity and other parameters"
+            },
+            {
+              "step": 6,
+              "actor": "User (Bank Officer)",
+              "action": "Saves the record to complete linking of Customer ID with the Loan Product"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WF_LOAN_ORGANIZATION_SYSTEM_APPRAISAL",
+          "name": "Loan Appraisal Workflow",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": [
+            "Customer ID created and linked to the loan Account",
+            "All the Customer details captured in the LOS such as Proposed Asset details, Asset & Liabilities Details, Proposed Loan Limit arrived",
+            "Particulars of the Co-applicant/Guarantor/Co-Obligant captured"
+          ],
+          "postConditions": [
+            "Loan appraisal note/Process note generated",
+            "Bank Officer can proceed further with the Risk Analysis"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates the appraisal process after Customer ID is created and all customer details are captured in LOS"
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Requests and obtains Legal Scrutiny Report (LSR) from the Bank's advocate"
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Requests and obtains Security Valuation Report from the Bank appointed Engineers"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Obtains Verification report for customer's personal and employment details from external/internal agencies"
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Obtains Income Verification Report from Employer/IT department"
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Obtains Credit Information Report from customer's existing Bankers and Credit Information Bureau"
+            },
+            {
+              "step": 7,
+              "actor": "Bank Officer",
+              "action": "Captures all obtained report details into the Appraisal process in LOS"
+            },
+            {
+              "step": 8,
+              "actor": "Bank Officer",
+              "action": "Saves the record to generate Appraisal Note/Process Note"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_FLOW_FOR_LOAN_ASSESSMENT",
+          "name": "Work Flow for Loan Assessment",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": "Customer ID created and linked to the loan account; all customer details captured in LOS including proposed asset details, asset & liabilities details, proposed loan limit, particulars of co-applicant/guarantor/co-obligant; appraisal note/process note generated; risk analysis completed.",
+          "postConditions": "Assessment process of proposed loan is completed; Bank Officer proceeds with terms and conditions to be specified.",
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates the loan assessment process to arrive at the maximum loan amount."
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Ensures that customer and loan details are completed and captured in LOS."
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Calculates the maximum loan amount based on project cost, margin, and product caps."
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Prepares assessment sheet with fields: loan amount requested, present income, present security value, rate of interest, loan tenure, future service period, repayment capacity, and assessed loan amount."
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Verifies assessment details and adds remarks for any changes to assessment amount."
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Completes assessment process and proceeds with terms and conditions specification."
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_FLOW_FOR_RECOMMONDATIONS",
+          "name": "Work Flow for Recommendations",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": "Customer ID created and linked to loan account, all customer details captured in LOS including Proposed Asset details, Asset & Liabilities Details, Proposed Loan Limit, particulars of Co-applicant/Guarantor/Co-Obligant, Appraisal note/Process note generated, Risk Analysis completed, Proposed Loan Amount assessed and Terms & conditions finalized.",
+          "postConditions": "Recommendations added and the Appraisal/Process note forwarded to the Sanctioning authorities for approval.",
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates the process for adding recommendations to the Proposed Loan."
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Updates recommendations such as Loan Amount, Rate of Interest, Loan Tenure, and Proposed repayment."
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Provides justification for recommended changes in the Loan Proposal."
+            },
+            {
+              "step": 4,
+              "actor": "System",
+              "action": "Captures the changes proposed and recommended in LOS."
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Saves the updated recommendations."
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Forwards the Appraisal note/Process note to the approving/Sanctioning authorities."
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_FLOW_FOR_RISK_ANALYSIS",
+          "name": "Work Flow for Risk Analysis",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": "Customer ID created and linked to the loan Account & all the Customer details captured in the LOS such as Proposed Asset details, Asset & Liabilities Details, Proposed Loan Limit arrived, particulars of the Co-applicant/ Guarantor/ Co-Obligant & Appraisal note/ Process note generated.",
+          "postConditions": "Risk Analysis is completed & the Bank Officer proceeds further for Assessment of the Loan.",
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates the Risk rating process once Customer ID is created and linked to the loan Account and customer details are captured in LOS."
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Obtains and verifies reports such as Legal Scrutiny report, Technical Report, Financial Verification report, and Employment/ Personal Verification report from various departments/agencies."
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Verifies the Loan Application form for Customer's Financial Details, Employment details, Personal Details, Security details."
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Evaluates Customer's risk rating by considering parameters like Personal Data, Age, Education, Occupation, Number of dependents, Length of service in present job/current business, Existing relationship with the Bank, Other business support, Period of stay in current address, Type of ownership of residence, Ownership of vehicles, Income/Net worth, Loan Details, Security coverage, Guarantors Net worth, and Type of loan."
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Assigns weightages to the risk evaluation parameters to determine the Risk Rating score of the Customer."
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Categorizes Customer based on Risk Rating score and captures the rating into the LOS."
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_FLOW_FOR_SANCTION_LETTER_GENERATION_&_CUSTOMERS_RESPONSE",
+          "name": "Work Flow for Sanction Letter Generation & Customers Response",
+          "module": "Loan Origination System",
+          "actors": ["Customer", "Bank Officer"],
+          "preConditions": [
+            "Loan Proposal has already been Approved/ Rejected by the Sanctioning Authorities"
+          ],
+          "postConditions": [
+            "Loan Offer Accepted by the customer",
+            "Bank Officer initiates the process for Opening Loan Account in CBS"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Generates the Sanction or Rejection letter to communicate the Loan status to the customer"
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Includes loan details such as name, co-applicant, address, type, status, amount, interest rate, tenure, EMI, repayment schedule, holiday period, guarantor details, terms & conditions, time clause, and remarks in the letter"
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Forwards the Sanction or Rejection letter to the customer to communicate the loan status and obtain acceptance"
+            },
+            {
+              "step": 4,
+              "actor": "Customer",
+              "action": "Receives the Sanction or Rejection letter"
+            },
+            {
+              "step": 5,
+              "actor": "Customer",
+              "action": "Acknowledges the offer and returns the acceptance to the Bank Officer or intimates rejection"
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Updates the customer's response in the Loan Origination System"
+            },
+            {
+              "step": 7,
+              "actor": "Bank Officer",
+              "action": "Initiates the process for opening Loan Account in CBS based on customer's acceptance"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_FLOW_FOR_SANCTION_OF_LOAN",
+          "name": "Work Flow for Sanction of Loan",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer", "Sanctioning Authority"],
+          "preConditions": [
+            "Customer ID created and linked to the loan Account",
+            "All Customer details captured in the LOS including Proposed Asset details, Asset & Liabilities Details, Proposed Loan Limit",
+            "Particulars of Co-applicant/Guarantor/Co-Obligant captured",
+            "Appraisal note / Process note generated",
+            "Risk Analysis completed",
+            "Proposed Loan Amount assessed",
+            "Terms & conditions finalized",
+            "Recommendations updated & forwarded to sanctioning authorities for review"
+          ],
+          "postConditions": [
+            "Sanctioning Authority updates the sanction or rejection of Proposed Loan in LOS",
+            "Bank Officer communicates the sanction or rejection to the customer"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Sanctioning Authority",
+              "action": "Reviews the Appraisal Note / Process note for approval of Loan"
+            },
+            {
+              "step": 2,
+              "actor": "Sanctioning Authority",
+              "action": "Comments on discrepancies and insists on additional information or reports if any discrepancy in the recommended proposal"
+            },
+            {
+              "step": 3,
+              "actor": "Sanctioning Authority",
+              "action": "Retransmits the proposal back to Bank Officer for clearance of discrepancies"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Views comments given by Sanctioning Authority and requests additional information/report from customer/agency/department"
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Obtains additional information/report and updates Appraisal note / Process note in LOS and forwards it to Sanctioning Authority"
+            },
+            {
+              "step": 6,
+              "actor": "Sanctioning Authority",
+              "action": "Reviews modified Appraisal / Process note and either approves/sanctions the loan with additional conditions if any or rejects the loan proposal"
+            },
+            {
+              "step": 7,
+              "actor": "Sanctioning Authority",
+              "action": "Updates the sanction or rejection decision in LOS and forwards it to Bank Officer"
+            },
+            {
+              "step": 8,
+              "actor": "Bank Officer",
+              "action": "Communicates the sanction or rejection decision to the customer"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORK_FLOW_FOR_TERMS_&_CONDITIONS",
+          "name": "Work Flow for Terms & Conditions",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": [
+            "Customer ID created and linked to the loan Account",
+            "All Customer details captured in LOS including Proposed Asset details, Asset & Liabilities Details",
+            "Proposed Loan Limit arrived",
+            "Particulars of the Co-applicant/ Guarantor/ Co\u2013Obligant captured",
+            "Appraisal note/ Process note generated",
+            "Risk Analysis completed",
+            "Proposed Loan Amount assessed"
+          ],
+          "postConditions": [
+            "Process for finalization of Terms & Conditions completed",
+            "Bank Officer proceeds further for recommendation"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates the process for adding Terms & Conditions for the Proposed Loan"
+            },
+            {
+              "step": 2,
+              "actor": "System",
+              "action": "Displays the Terms & Conditions which are specific and generic to the product"
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Views the generic Terms & Conditions and modifies or deletes them in LOS"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Adds the required additional Terms & Conditions to the Appraisal note or Process note in LOS, if any"
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Finalizes and saves the Terms & Conditions record and proceeds further for recommendation"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORKFLOW_FOR_CAPTURING_PROPOSED_ASSET_DETAILS",
+          "name": "Workflow for Capturing Proposed Asset Details",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": [
+            "Customer ID has already been created",
+            "Customer ID linked to the Loan Product"
+          ],
+          "postConditions": [
+            "Proposed Asset details captured in LOS",
+            "The Bank Officer can check the proposed limit"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates capturing of Proposed Asset details in LOS after Customer ID is linked to Loan Product"
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Checks application form for Purpose of the loan and Proposed Asset details"
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Captures Proposed Asset details in LOS such as Loan Type, Type of Asset, Purpose of Loan, Asset Cost, Total Purchase price, Incidental Cost, Other Cost, Market Value, Loan Outstanding, Address, Area of land, Built up area, and Stage of construction"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Saves the Proposed Asset details record and proceeds to check the proposed limit/loan"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORKFLOW_FOR_CHECK_LIMIT",
+          "name": "Workflow for checking the eligibility of the customer & proposed loan limit",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": [
+            "Customer ID has already been created linked to the Loan product",
+            "Proposed asset details captured"
+          ],
+          "postConditions": [
+            "Loan Limit checked & captured in LOS",
+            "Bank Officer can proceed further for capturing the Asset & Liabilities details of the customer"
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Initiates the process for checking the Loan limit after Proposed Asset details are captured into the LOS"
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Checks the application form for Income, Expenditure, Asset details, Loan Amount, and tenure"
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Enters customer details in the Loan calculator including Loan Type, Date of Birth, Purpose of Loan, Asset Details, Cost of Asset, Loan Amount, Loan Tenure, Occupation, Company Details, Total Work experience, Age of retirement, Monthly Income, Other Income, Total EMI for existing liabilities, and Co-Applicant details"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Submits the record to determine eligibility of customer and proposed Loan Limit"
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Captures the proposed Loan limit into the LOS"
+            }
+          ]
+        },
+        {
+          "useCaseId": "UC_WORKFLOW_FOR_EVAUATING_THE_NETWORTH_OF_THE_PARTIES",
+          "name": "Workflow for Evaluating the Net Worth of the Parties",
+          "module": "Loan Origination System",
+          "actors": ["Bank Officer"],
+          "preConditions": [
+            "Customer ID\u2019s has already been created for all the parties and linked to the proposed Loan."
+          ],
+          "postConditions": [
+            "Loan Limit checked & captured in LOS.",
+            "The Bank Officer can proceed further for the Appraisal of the proposed loan."
+          ],
+          "workflow": [
+            {
+              "step": 1,
+              "actor": "Bank Officer",
+              "action": "Checks the primary eligibility of the customer in LOS after the proposed asset details are captured"
+            },
+            {
+              "step": 2,
+              "actor": "Bank Officer",
+              "action": "Creates Customer IDs for Co-applicant, Co-obligant, and Guarantor and links them to the proposed loan"
+            },
+            {
+              "step": 3,
+              "actor": "Bank Officer",
+              "action": "Initiates the process to evaluate assets and liabilities for calculating net worth of all parties"
+            },
+            {
+              "step": 4,
+              "actor": "Bank Officer",
+              "action": "Enters asset details including savings, immovable properties, bank deposits, investments, and LIC policy info in LOS"
+            },
+            {
+              "step": 5,
+              "actor": "Bank Officer",
+              "action": "Enters liabilities details including borrowings from banks/others, employer liabilities, and other liabilities in LOS"
+            },
+            {
+              "step": 6,
+              "actor": "Bank Officer",
+              "action": "Evaluates assets and liabilities of all parties and captures data in LOS to arrive at net worth (Assets minus Liabilities)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1453 @@
+{
+  "domain": "FMS",
+  "modules": [
+    {
+      "moduleName": "Loan Origination System",
+      "useCases": [{
+  "useCaseId": "UC_ASSET_DETAILS",
+  "name": "Maintains the Asset details",
+  "module": "Loan Origination System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": "System should support to capture the Asset details and insurance details",
+  "postConditions": "Updated Asset details and insurance details saved in database.",
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Updates asset details including Supplier, Delivery order date, Asset cost, Origination state, Installation state, Registration number in system"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Physically identifies the asset and ensures it is maintained in good condition and adequately insured"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Maintains asset inspection details such as Asset ID, Agreement no, Inspection date, Remarks, Defect reason, Inspection done by, Next inspection date in system"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Captures insurance details including Asset Description, Nature of Insurance, Policy no, Coverage/Insured amount, Insured date, Expiry date, Premium, Insurance Company in system"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Saves the updated asset details and insurance details in the database"
+    }
+  ]
+},
+    {
+  "useCaseId": "UC_PDC_PRINTING",
+  "name": "PDC Printing",
+  "module": "Finance Application",
+  "actors": [
+    "User",
+    "Customer",
+    "System"
+  ],
+  "preConditions": [
+    "Submission of PDC cheques",
+    "Mode of repayment should be PDC"
+  ],
+  "postConditions": [
+    "The cheques will be printed with the installment amount, Payee name and the due date of the installment"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Receives the PDC cheques from customer for using of finance repayment"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Enters the PDC as the mode of payment and saves the repayment information in the System"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Enters the PDCs list in the PDC collections section on the screen"
+    },
+    {
+      "step": 4,
+      "actor": "System",
+      "action": "Displays the PDC Print screen for the user to print the cheques"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Selects the application ID/ Agreement ID and submits to search the application/finance details"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Displays the screen for cheque printing"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Checks the details of all the due instalments for cheque printing"
+    },
+    {
+      "step": 8,
+      "actor": "User",
+      "action": "Enters the blank cheques received from the customer in the printer to print the cheques"
+    },
+    {
+      "step": 9,
+      "actor": "User",
+      "action": "Submits the cheques to the printer"
+    },
+    {
+      "step": 10,
+      "actor": "System",
+      "action": "Prints the cheques with the Payee Name, Due Date and the installment amount for the number of installments selected for printing"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF__INSTALLMENT_PREPAYMENT",
+  "name": "Installment Prepayment",
+  "module": "Financial Management System",
+  "actors": [
+    "User",
+    "Customer"
+  ],
+  "preConditions": [
+    "The prepayment amount received from the customer is to be processed."
+  ],
+  "postConditions": [
+    "Installment prepayment is done successfully."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Customer",
+      "action": "Pays the prepayment installment as an advance."
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Receives the amount from the customer to process the payment in the system."
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Opens the Financial Management System application."
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Navigates to Installment Prepayment screen."
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Enters payment details including Prepayment ID, Customer Name, Agreement ID, Prepayment amount, Account No, Agreement Number, Installment amount, Principal amount, and Balance installment amount."
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Allocates amount received towards the last installment and reduces the tenure by the number of installments prepaid by the customer."
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Saves the record once the process is completed or resets the details."
+    }
+  ]
+},
+{
+  "useCaseId": "UC_WF__NPA_GRADING",
+  "name": "NPA Grading",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Only selected accounts are to be marked / graded for NPA."
+  ],
+  "postConditions": [
+    "NPA stage is done successfully"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Finance Grading screen"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Defines the NPA stage for a finance account, like Standard, Sub-standard, Doubtful or Loss"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Defines the NPA movements for finance accounts to derive the NPA stage"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Understands NPA stage movement as either forward movement or backward movement"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Operates the NPA stage in two ways: Automatic NPA marking and Manual NPA marking"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Grades finance accounts manually by entering Agreement ID, New NPA stage, Remarks, NPA change date, Current NPA stage, Final NPA stage, and NPA reason"
+    },
+    {
+      "step": 8,
+      "actor": "User",
+      "action": "Saves the transaction after grading the NPA marking manually"
+    },
+    {
+      "step": 9,
+      "actor": "System",
+      "action": "Completes NPA grading successfully"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF__NPA_PROVISIONING",
+  "name": "NPA Provisioning",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Only selected accounts are to be provisioned for NPA"
+  ],
+  "postConditions": [
+    "NPA provisioning is done successfully"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Provisioning screen"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Performs NPA provisioning using one of two available methods"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "For Auto Provisioning NPA process, inputs Provision ID, Effective from date, NPA Criteria, NPA stage, Constitution, Secured portion, Unsecured portion, and selects Authorized, Unauthorized or Both"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "For Manual provisioning process, inputs Date, User ID, Batch ID, Product, Previous provisioned amount, Previous additional provision amount, Customer Name, Secured portion and Unsecured portion"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Saves the record after completion of NPA provisioning or cancels the action to reset details"
+    },
+    {
+      "step": 7,
+      "actor": "System",
+      "action": "Automatically posts the provisioned amount to General Ledger as per the NPA stage of the finance"
+    },
+    {
+      "step": 8,
+      "actor": "System",
+      "action": "Completes NPA provisioning process successfully"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF__SETTLEMENTS___KNOCK_OFF",
+  "name": "Settlements - Knock Off",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Receipts and payments details have to be considered into account"
+  ],
+  "postConditions": [
+    "Knock off is done successfully"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Knock Off in Settlements"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Checks the pending amounts of both receivables and payables from Knock Off screen"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Sets knock off amount payable against amount receivable from the customer"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Validates that sum of receivable advices equals sum of payable advices for transaction knock off"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Validates that allocated amount is not greater than amount to be allocated"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Validates that knock off date is not greater than current business date"
+    },
+    {
+      "step": 8,
+      "actor": "System",
+      "action": "Shows only those advices of a finance whose advice date is less than or equal to knock off date entered"
+    },
+    {
+      "step": 9,
+      "actor": "User",
+      "action": "Ensures receivable and payable advices relate to one business partner type for knock off"
+    },
+    {
+      "step": 10,
+      "actor": "User",
+      "action": "Initiates knock off feature after validations and gets it authorized"
+    },
+    {
+      "step": 11,
+      "actor": "User",
+      "action": "Checks previous manual knock offs and selects record for reversal if required"
+    },
+    {
+      "step": 12,
+      "actor": "User",
+      "action": "Authorizes the knock-off reversal"
+    },
+    {
+      "step": 13,
+      "actor": "System",
+      "action": "Completes knock off successfully"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF__SETTLEMENTS_CHEQUE(RECEIPT_PAYMENT)_PROCESSING",
+  "name": "Settlements \u2013 Cheque(Receipt/Payment) Processing",
+  "module": "Settlements",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "User collects the details of cheques."
+  ],
+  "postConditions": [
+    "Receipt/Payment processing is done successfully."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Receipt/Payment processing in Settlements"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Enters the Payment/Receipt processing details in specified fields including Payment Mode, Agreement No., In favor of, Cheque No., Date, Amount, Currency, Cheque type, and Branch details"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Saves the record once the details are captured"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Completes Receipt/Payment processing successfully"
+    }
+  ]
+},
+{
+  "useCaseId": "UC_WF__SETTLEMENTS_MANUAL_ADVISE",
+  "name": "Settlements Manual Advise",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "User collects the payment details."
+  ],
+  "postConditions": [
+    "Manual advice is done successfully."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Manual advise in Settlements"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Selects the business party for payment with agreement ID"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Enters advice details including Advice ID, Advice Date, Agreement No., Advice amount, Advice type, Currency, Charge type, Maker ID, Date, and Remarks"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Creates the due as per the defined process"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Processes the payment to the customer"
+    },
+    {
+      "step": 7,
+      "actor": "System",
+      "action": "Confirms manual advice is done successfully"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF__TERMINATION___FORECLOSURE___CLOSURE",
+  "name": "Termination / Foreclosure / Closure",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Only selected accounts are to be terminated or foreclosed."
+  ],
+  "postConditions": [
+    "Termination or foreclosure is done successfully."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application."
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Finance Termination screen page."
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Enters at least one ID selecting from App Id, Customer ID, Branch Id."
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Checks the details of the application status including Agreement ID, Agreement date, Amount Fin, Frequency, Customer Name, Tenure, Agreement No."
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Checks dues fields: Principal amount, Residual value, Past due installments, Outstanding payments, Total dues."
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Checks refunds fields: Excess amount, Excess refunds, Advice, Rebate, Adv installments, Total Refunds."
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Makes modifications or updates to the accounts as necessary."
+    },
+    {
+      "step": 8,
+      "actor": "User",
+      "action": "Processes the payment so that the outstanding balance becomes zero and the account is closed."
+    },
+    {
+      "step": 9,
+      "actor": "User",
+      "action": "Levies fees to customer to foreclose the account if early termination is done."
+    },
+    {
+      "step": 10,
+      "actor": "User",
+      "action": "Completes termination or account foreclosure successfully."
+    }
+  ]
+},{
+  "useCaseId": "UC_WF_FMS__FINANCE_VIEWER",
+  "name": "Finance Viewer",
+  "module": "Financial Management System",
+  "actors": [
+    "Bank Officer"
+  ],
+  "preConditions": [
+    "The same finance details disbursed through customer acquisition search shall be viewed from finance viewer screen."
+  ],
+  "postConditions": [
+    "System shows the finance details in view mode."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Bank Officer",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "Bank Officer",
+      "action": "Navigates to Finance Query Screen"
+    },
+    {
+      "step": 3,
+      "actor": "Bank Officer",
+      "action": "Initiates the process for searching to view the finance details of the customer using one or more query parameters"
+    },
+    {
+      "step": 4,
+      "actor": "Bank Officer",
+      "action": "Inputs parameters such as Date, Branch Name, Customer Name, Co-Applicant Details, Guarantor Details, Requested Amount, Sanctioned Amount, Disbursal Date, Disbursal Type, Period, Employer details, Employee details, Tenure, Installments details, Installment plan, Frequency, Number of Installments, Installment Mode, Advance Installment, Due Date, First Installment Date"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Fetches and displays the complete finance details of selected finance ID and related details from Loan Origination System"
+    },
+    {
+      "step": 6,
+      "actor": "Bank Officer",
+      "action": "Views the finance details in view mode"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF_FMS__FLOATING_REVIEW_PROCESS",
+  "name": "Floating Review Process",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Floating Rates and types shall be applied to all the financial instruments."
+  ],
+  "postConditions": [
+    "Floating Rate Review is done successfully."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Floating Review Process screen"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Recalculates the floating profit depending on the change in Prime Lending Rate (PLR)"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Applies the prime rate types to all finances from Floating Review Process page"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Specifies Prime Rate Type for EMI & Pre-EMI schedules including EIBOR, LIBOR, Date"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Updates the Floating Rate Review on daily basis and checks system for new EMI schedules if profit rate changes"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Saves the transaction or cancels to reset the details"
+    },
+    {
+      "step": 8,
+      "actor": "System",
+      "action": "Completes the Floating Review Process successfully"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF_FMS__SETTLEMENTS___RECEIPTS",
+  "name": "Settlements - Receipts",
+  "module": "Settlements",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "User generates the receipt advices through the system"
+  ],
+  "postConditions": [
+    "Receipt advices are initiated for the customers"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Receipts screen from Settlements"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Enters details to generate Receipt Advices during the business transaction/process"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Records all details of funds received by financial institution through cheque, cash, draft, transfer, or point of sale"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Saves the payment details on receipt screen"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Processes cheque payments through cheque processing module including receipt, deposit (maker & checker), and realization (maker & checker)"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Processes cash payments in receipt screen in two stages: receipt and receipt deposit"
+    },
+    {
+      "step": 8,
+      "actor": "User",
+      "action": "Saves payment information and generates payment voucher"
+    },
+    {
+      "step": 9,
+      "actor": "System",
+      "action": "Prints voucher once record is saved on receipt of payment"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF_FMS__SETTLEMENTS_PAYMENTS",
+  "name": "WF_FMS_ Settlements - Payments",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "User makes payments to the customer by various modes like cash, cheques and fund transfer."
+  ],
+  "postConditions": [
+    "Payments are made to the customers."
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Settlement Payment screen for Settlements"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Specifies the finance against which the payment needs to be created"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Specifies the mode of payment along with details like cheque number, date of transaction, and payables against which the payment is to be made"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Collects payment details of the customer including Cheque ID, Currency, Date, Customer Name, Amount, Cheque No, In Favor of, Payable at, Account No., Reason"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Generates all the payable dues automatically or manually"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Adjusts the payments manually at the time of payment"
+    },
+    {
+      "step": 8,
+      "actor": "User",
+      "action": "Generates various advices on the basis of Disbursal Payments, Insurance Premium payment and Excess money payment"
+    },
+    {
+      "step": 9,
+      "actor": "User",
+      "action": "Sends the process payment details for authorization before paying the amount to the customer"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF_FMS__SETTLEMENTS_WAIVE_OFF",
+  "name": "Settlements - Waive Off",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Receivable amounts are eligible for waive off"
+  ],
+  "postConditions": [
+    "Waive off is done successfully"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Opens the Financial Management System application"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Navigates to Waive Off in Settlements"
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Displays the receivable amounts that need to be waived off"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Enters details: Agreement Number, Branch, Currency, Waive Off Date, Advice Details, Advice Date, Original amount, Current Advice amount, Already Waived Off amount, Already Adjusted amount, Amount to be waived off, Remarks"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Saves the record and sends for authorization"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Processes the waive off successfully"
+    }
+  ]
+},{
+  "useCaseId": "UC_WF_FMS_EOD__BOD",
+  "name": "EOD/BOD in FMS",
+  "module": "Financial Management System",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Date should not be changed in the system automatically when date is changed in general"
+  ],
+  "postConditions": [],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Run EOD processes scheduled by EOD setup"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Execute End Of Day to check and nullify processes such as Profit Accruals, Late Payment Profit Calculation, Autos knock off, DPD Process, NPA Process, and Date Change Process"
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Calculate and keep Profit Accruals until application or maturity"
+    },
+    {
+      "step": 4,
+      "actor": "System",
+      "action": "Calculate overdue profit in Late Payment Profit Calculation process"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Check outstanding payable and receivable advices and knock them off based on auto allocation logic"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Calculate Days Past Due for client installments"
+    },
+    {
+      "step": 7,
+      "actor": "System",
+      "action": "Classify assets as Non-Performing based on defined criteria"
+    },
+    {
+      "step": 8,
+      "actor": "System",
+      "action": "Move system to next business date"
+    },
+    {
+      "step": 9,
+      "actor": "User",
+      "action": "Run BOD to start the day's activities"
+    },
+    {
+      "step": 10,
+      "actor": "User",
+      "action": "Execute BOD mainly for the process of converting PEMI to EMI and auto-generate EMI repayment schedule after disbursement authorization"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_CLOSURE_ACCOUNT__CLOSURE",
+  "name": "Work Flow Closure \u2013 Account Closure",
+  "module": "Finance Account Management",
+  "actors": [
+    "User",
+    "Customer"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "No due/Refund to the Finance Account"
+  ],
+  "postConditions": [
+    "Finance Account Closed",
+    "Customer is notified with the Finance Account status"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Initiates the process for closure of Finance Account"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Enters the agreement ID to retrieve the Finance Account for closure"
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Displays Finance Account details including Agreement ID, Customer Name, Amount Financed, Tenure, Profit Rate, Agreement No, EMI, Dues, and Refund details"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Views the status of the Finance Account and ensures there is no Due or Refund to the customer"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Closes the Finance Account if there is no Due or Refund"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Notifies the Customer that the Finance Account is closed"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_CLOSURE_VIEW_ACCOUNT_STATUS",
+  "name": "Work Flow Closure \u2013 View Account Status",
+  "module": "Finance Account Closure",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Existing Finance Account"
+  ],
+  "postConditions": [
+    "Finance Account status viewed",
+    "Initiates the further process for closure of Finance Account"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Selects the Account status option in the system"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Enters the agreement ID to retrieve the Finance Account status"
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Displays Finance Account details including Agreement ID, Customer Name, Amount Financed, Tenure, Profit Rate, Agreement No, EMI, Dues (Balance Principal, Due Installments, Outstanding Payments, Prepayment Penalty, Profit on termination, Total Due), Refund (Excess Amount, Advance Installments, Excess Principal, Excess Profit, Total Refund)"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Views the status of the Finance Account"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "If there is any due from the customer, requests repayment to proceed further for Closure process"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "If there is any Refund to the Customer, initiates the process for Refund to customer"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_DOCUMENT_MASTER",
+  "name": "Work Flow \u2013 Document Master",
+  "module": "Document Management",
+  "actors": [
+    "User"
+  ],
+  "preConditions": [
+    "Existing Finance Account"
+  ],
+  "postConditions": [
+    "Document status updated in Document Master"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Initiates the process for updation of the document master with the document status pertaining to the Finance Account"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Retrieves the Document Master pertaining to the Finance Account with the Agreement ID"
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Displays the Document Master with document stage, document for, customer name, finance type, guarantor/co-applicant, maker ID, checker ID, document details, description, document, mandatory, status, date, tracker no, reason, target date, validity date, remarks"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Updates the Document Master with the Finance Account documents and saves the record"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_FINANACE_RESCHEDULING_BULK_PREPAYMENT",
+  "name": "Finance Rescheduling - Bulk Prepayment",
+  "module": "Finance Rescheduling",
+  "actors": [
+    "Customer",
+    "User",
+    "Checker",
+    "System"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Bulk Repayment to the Finance Account"
+  ],
+  "postConditions": [
+    "Bulk Prepayment marked to the Finance Account",
+    "New Repayment schedule generated"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Customer",
+      "action": "Submits the request for Bulk Payment along with the Cash/Cheque to the Finance Account"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Verifies the Finance Account details & initiates the process for making Bulk Prepayment"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Initiates the process for generation of New Repayment schedule due to Bulk Prepayment"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Retrieves the Finance Account details with the Agreement ID for generation of New Repayment Schedule"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Displays the Finance Account details including Finance No, Agreement ID, Loan Type, Balance outstanding, Original Tenure, Due Date, Bulk Refund Amount, Reschedule Effective Date, Repayment Effective Date, Balance Tenure, Frequency, Profit Rate"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Enters the Bulk Refund Amount & submits the record for generation of New Repayment Schedule"
+    },
+    {
+      "step": 7,
+      "actor": "Checker",
+      "action": "Retrieves the New Repayment Schedule with the Agreement ID, verifies and authorizes it if found correct"
+    },
+    {
+      "step": 8,
+      "actor": "System",
+      "action": "Generates the New Repayment schedule"
+    },
+    {
+      "step": 9,
+      "actor": "System",
+      "action": "Notifies the customer accordingly"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_FINANACE_RESCHEDULING_DUE_DATE_CHANGE",
+  "name": "Finance Rescheduling - Due Date Change",
+  "module": "Finance Rescheduling",
+  "actors": [
+    "Customer",
+    "User",
+    "Checker"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Due Date Change to the Finance Account"
+  ],
+  "postConditions": [
+    "Due date Change marked to the Finance Account",
+    "New Repayment schedule generated"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Customer",
+      "action": "Submits request for Due Date Change of the Finance Installment"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Verifies the request and rules pertaining to the Due Date Change"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Initiates process for Due Date Change after verification"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Initiates generation of New Repayment Schedule due to Due Date Change"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Retrieves Finance Account details with Agreement ID for New Repayment Schedule generation"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Displays Finance Account details including Finance No, Agreement ID, Loan Amount, Original Tenure, Original Due Date, Outstanding Amount, Reschedule Effective Date, Repayment Effective Date, Bulk Refund Amount, Balance Tenure, Frequency, Rate of Interest"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Modifies Due Date of the Installment and submits for New Repayment Schedule generation"
+    },
+    {
+      "step": 8,
+      "actor": "Checker",
+      "action": "Retrieves and verifies the New Repayment Schedule using Agreement ID"
+    },
+    {
+      "step": 9,
+      "actor": "Checker",
+      "action": "Authorizes the New Repayment Schedule if found correct"
+    },
+    {
+      "step": 10,
+      "actor": "System",
+      "action": "Generates New Repayment Schedule and notifies the Customer"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_FINANACE_RESCHEDULING_PROFIT_RATE_CHANGE",
+  "name": "Finance Rescheduling - Rate of Interest Change",
+  "module": "Finance Rescheduling",
+  "actors": [
+    "Customer",
+    "User",
+    "Checker",
+    "System"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Interest Rate Change to the Finance Account requested"
+  ],
+  "postConditions": [
+    "Interest Rate Change marked to the Finance Account",
+    "New Repayment schedule generated"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Customer",
+      "action": "Submits the request for Interest Rate Change of the Finance Account at the Bank"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Verifies the Interest Rate Change request and related rules"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Initiates the process for Interest Rate Change after verification"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Initiates process for generation of New Repayment Schedule"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Retrieves Finance Account details using Agreement ID for new schedule generation"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Displays Finance Account details including Finance No, Agreement ID, Original Loan Amount, Original Rate of Interest, Original Tenure, Due Date, Reschedule Effective Date, Repayment Effective Date, Bulk Refund Amount, Balance Tenure, Frequency, Modified Interest Rate"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Modifies Interest Rate of Finance Account and submits for new Repayment Schedule generation"
+    },
+    {
+      "step": 8,
+      "actor": "Checker",
+      "action": "Retrieves and verifies the New Repayment Schedule using Agreement ID"
+    },
+    {
+      "step": 9,
+      "actor": "Checker",
+      "action": "Authorizes the New Repayment Schedule if found correct"
+    },
+    {
+      "step": 10,
+      "actor": "System",
+      "action": "Generates the New Repayment Schedule and notifies the Customer"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_FINANACE_RESCHEDULING_TENURE_CHANGE",
+  "name": "Finance Rescheduling - Tenure Change",
+  "module": "Finance Rescheduling",
+  "actors": [
+    "Customer",
+    "User",
+    "Checker"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Tenure Change requested for the Finance Account"
+  ],
+  "postConditions": [
+    "Tenure Change marked to the Finance Account",
+    "New Repayment schedule generated"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Customer",
+      "action": "Submits request for Tenure Change at the Bank"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Verifies the Tenure Change request and applicable rules"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Initiates the process for Tenure Change upon verification"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Modifies the Tenure of the Finance Account"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Initiates generation of New Repayment Schedule"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Retrieves Finance Account details using Agreement ID"
+    },
+    {
+      "step": 7,
+      "actor": "System",
+      "action": "Displays Finance Account details including Finance No, Agreement ID, Loan Amount, Original Tenure, EMI Amount, Due Date, Reschedule Effective Date, Repayment Effective Date, Bulk Refund Amount, Balance Tenure, Frequency, Rate of Interest"
+    },
+    {
+      "step": 8,
+      "actor": "User",
+      "action": "Modifies Balance Tenure and submits for New Repayment Schedule generation"
+    },
+    {
+      "step": 9,
+      "actor": "Checker",
+      "action": "Retrieves New Repayment Schedule using Agreement ID and verifies it"
+    },
+    {
+      "step": 10,
+      "actor": "Checker",
+      "action": "Authorizes the New Repayment Schedule if found correct"
+    },
+    {
+      "step": 11,
+      "actor": "System",
+      "action": "Generates New Repayment Schedule and notifies the Customer"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_POST_DISBURSAL_EDIT",
+  "name": "Post Disbursal Edit",
+  "module": "Finance Account Management",
+  "actors": [
+    "User"
+  ],
+  "preConditions": "Existing/ New Finance Account.",
+  "postConditions": "Non Financial information pertaining to the Finance Account modified.",
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Initiates the process for modification of Non Financial information of the Finance Account."
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Enters the agreement ID to retrieve the Finance Account for modification of Non Financial information."
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Displays the Account details."
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Selects the specific tab and modifies details such as Guarantor Details, Co-Applicant Details, Address Details, Work Details, and Instrument Details."
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Modifies the required details and saves the record for modification of the details."
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_REPAYMENT_DEFERRAL_CONSTITUTION_WISE_DEFERRAL",
+  "name": "Repayment Deferral - Constitution Based Deferral",
+  "module": "Repayment Deferral",
+  "actors": [
+    "User",
+    "Checker"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Need for Repayment Deferral"
+  ],
+  "postConditions": [
+    "Repayment Deferral marked to the Finance Account through Constitution Based process"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Initiates the Deferral marking process through constitution based approach"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Selects the particular constitution to mark deferral in Deferral option"
+    },
+    {
+      "step": 3,
+      "actor": "System",
+      "action": "Displays the list of Finance Accounts pertaining to the constitution"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Selects the Finance Account for which the deferral needs to be marked"
+    },
+    {
+      "step": 5,
+      "actor": "User",
+      "action": "Enters Deferral Effective Date and No of Deferrals details"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Submits the record for deferral marking"
+    },
+    {
+      "step": 7,
+      "actor": "Checker",
+      "action": "Verifies the Deferral record details and authorizes if found correct"
+    },
+    {
+      "step": 8,
+      "actor": "System",
+      "action": "Notifies customers pertaining to the Finance Accounts on the Deferral"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_REPAYMENT_DEFERRAL_FINANACE_WISE_DEFERRAL",
+  "name": "Finance Wise Deferral",
+  "module": "Repayment Deferral",
+  "actors": [
+    "Customer",
+    "User",
+    "Checker"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Repayment Deferral request received from the customer"
+  ],
+  "postConditions": [
+    "Repayment Deferral marked to the Finance Account"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "Customer",
+      "action": "Submits the request for Repayment Deferral by quoting the number of deferrals"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Verifies the Deferral request submitted by the customer and checks Deferral rules for the Finance Account"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Initiates the process to update deferral details in the system once deferral rules are satisfied"
+    },
+    {
+      "step": 4,
+      "actor": "User",
+      "action": "Retrieves Finance Account details with Agreement ID for deferral update"
+    },
+    {
+      "step": 5,
+      "actor": "System",
+      "action": "Displays deferral screen with relevant finance and deferral parameters"
+    },
+    {
+      "step": 6,
+      "actor": "User",
+      "action": "Captures deferral details and generates new repayment schedule"
+    },
+    {
+      "step": 7,
+      "actor": "User",
+      "action": "Submits the new repayment schedule for authorization"
+    },
+    {
+      "step": 8,
+      "actor": "Checker",
+      "action": "Verifies and authorizes the new repayment schedule"
+    },
+    {
+      "step": 9,
+      "actor": "System",
+      "action": "Notifies customer of the authorized new repayment schedule"
+    }
+  ]
+},{
+  "useCaseId": "UC_WORK_FLOW_REPAYMENT_DEFERRAL_PORTFOLIO_WISE_DEFERRAL",
+  "name": "Repayment Deferral Batch (Portfolio) Wise Deferral",
+  "module": "Repayment Deferral",
+  "actors": [
+    "User",
+    "Checker"
+  ],
+  "preConditions": [
+    "Existing Finance Account",
+    "Need for Repayment Deferral"
+  ],
+  "postConditions": [
+    "Repayment Deferral marked to the Batch (Portfolio)"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "actor": "User",
+      "action": "Creates a file containing deferral details pertaining to the portfolio"
+    },
+    {
+      "step": 2,
+      "actor": "User",
+      "action": "Uploads the deferral file into the system for deferral marking"
+    },
+    {
+      "step": 3,
+      "actor": "User",
+      "action": "Selects the file and upload date and submits the file for upload"
+    },
+    {
+      "step": 4,
+      "actor": "System",
+      "action": "Processes the uploaded file"
+    },
+    {
+      "step": 5,
+      "actor": "Checker",
+      "action": "Verifies the deferral file and authorizes if correct"
+    },
+    {
+      "step": 6,
+      "actor": "System",
+      "action": "Notifies customers pertaining to the portfolio on the deferral"
+    }
+  ]
+}
+]}]}
