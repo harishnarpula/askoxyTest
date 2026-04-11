@@ -1,0 +1,58 @@
+body {
+  margin: 0;
+  font-family: Arial;
+}
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 300px;
+  border-right: 1px solid #ddd;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
+.project-list {
+  padding: 40px;
+}
+
+.project-card {
+  display: block;
+  width: 250px;
+  margin: 10px 0;
+  padding: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.file-node {
+  margin-left: 8px;
+}
+
+.file-label {
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.code-viewer pre {
+  background: #111;
+  color: #0f0;
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.loader {
+  padding: 40px;
+}
+
+.empty-viewer {
+  padding: 40px;
+  color: gray;
+}
