@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { PipelineStep } from "../type/types";
-import { StepTokensMap } from "../hooks/usePipeline";
+import type { PipelineStep } from "../type/types";
+import type { StepTokensMap } from "../hooks/usePipeline";
 
 interface Props {
   steps: PipelineStep[];

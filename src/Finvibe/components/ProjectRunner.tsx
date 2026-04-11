@@ -42,7 +42,7 @@ export default function ProjectRunner({
 
     webcontainer.on(
       "server-ready",
-      (port: number, url: string) => {
+      (_port: number, url: string) => {
 
         if (iframeRef.current) {
 

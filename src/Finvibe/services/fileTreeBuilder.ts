@@ -1,5 +1,5 @@
-import { CodeFile } from "../type/file";
-import { FileSystemTree } from "@webcontainer/api";
+import type { CodeFile } from "../type/file";
+import type { FileSystemTree } from "@webcontainer/api";
 
 export function buildFileSystemTree(files: CodeFile[]): FileSystemTree {
   const tree: FileSystemTree = {};

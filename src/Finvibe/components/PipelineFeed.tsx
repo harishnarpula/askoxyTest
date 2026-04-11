@@ -89,13 +89,12 @@ function TokenStream({ tokens, accent }: { tokens: string; accent: string }) {
 // ── Single step card ──────────────────────────────────────────────────────────
 
 function StepCard({
-  step, idx, isLastStep, tokens, isLiveRun, expandedSteps, toggleStep, partialResult, result, onViewCode,
+  step, idx, isLastStep, tokens, expandedSteps, toggleStep, partialResult, result, onViewCode,
 }: {
   step: PipelineStep;
   idx: number;
   isLastStep: boolean;
   tokens: string;
-  isLiveRun: boolean;
   expandedSteps: Set<number>;
   toggleStep: (i: number) => void;
   partialResult?: Partial<GenerationResult>;
@@ -305,7 +304,6 @@ function ConversationTurnView({ turn, onViewCode }: { turn: ConversationTurn; on
         <StepCard key={step.step} step={step} idx={idx}
           isLastStep={idx === visibleSteps.length - 1}
           tokens={turn.stepTokens[step.step] ?? ""}
-          isLiveRun={false}
           expandedSteps={expandedSteps} toggleStep={toggleStep}
           partialResult={turn.partialResult}
           result={turn.result}
@@ -387,7 +385,6 @@ function LiveTurnView({ steps, stepTokens, partialResult, result, prompt, onView
         <StepCard key={step.step} step={step} idx={idx}
           isLastStep={idx === visibleSteps.length - 1}
           tokens={stepTokens[step.step] ?? ""}
-          isLiveRun={true}
           expandedSteps={expandedSteps} toggleStep={toggleStep}
           partialResult={partialResult}
           result={result}
@@ -403,12 +400,6 @@ function LiveTurnView({ steps, stepTokens, partialResult, result, prompt, onView
         const activeStep = steps.find(s => s.status === "streaming");
         const isGenerating = activeStep && ["Backend Generation", "Frontend Generation", "Database Generation"].includes(activeStep.label.split(" (")[0]);
         if (!isGenerating && completedFiles === 0) return null;
-
-        const liveViewResult: GenerationResult = {
-          backend:  partialResult.backend  ?? [],
-          frontend: partialResult.frontend ?? [],
-          database: partialResult.database ?? [],
-        };
 
         return (
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl mt-0.5"
@@ -427,7 +418,7 @@ function LiveTurnView({ steps, stepTokens, partialResult, result, prompt, onView
 
 // ── Main PipelineFeed ─────────────────────────────────────────────────────────
 
-export function PipelineFeed({ steps, stepTokens, result, partialResult, running, paused, error, chatMessage, prompt, hasPendingClarification, history, onViewCode }: Props) {
+export function PipelineFeed({ steps, stepTokens, result, partialResult, running, paused, prompt, history, onViewCode }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

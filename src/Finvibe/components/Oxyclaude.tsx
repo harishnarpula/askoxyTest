@@ -192,7 +192,7 @@ function isTableRow(s: string): boolean {
   return t.split("|").length - 2 >= 2;
 }
 
-function renderCodeBlock(lang: string, code: string, key: string) {
+function _renderCodeBlock(lang: string, code: string, key: string) {
   return (
     <div
       key={key}
