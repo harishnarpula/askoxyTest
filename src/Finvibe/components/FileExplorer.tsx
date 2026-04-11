@@ -363,7 +363,7 @@ function TreeNodeView({
 
 // ── Code block ────────────────────────────────────────────────────────────────
 
-function CodeBlock({ code, path }: { code: string; path: string }) {
+function CodeBlock({ code }: { code: string; path: string }) {
   const [copied, setCopied] = useState(false);
   const lines = code.split("\n");
   const copy = () => {

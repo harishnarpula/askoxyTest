@@ -16,7 +16,7 @@ export default function CodeExplorer() {
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [view, setView] = useState<View>("titles");
-  const [loadProgress, setLoadProgress] = useState<LoadProgress | null>(null);
+  const [, setLoadProgress] = useState<LoadProgress | null>(null);
 
   // --- Tree / file state ---
   const [tree, setTree] = useState<CodeFile[]>([]);
@@ -33,13 +33,13 @@ export default function CodeExplorer() {
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [isPreloading, setIsPreloading] = useState(false);
+  const [isPreloading] = useState(false);
   const [webContainerError, setWebContainerError] = useState(false);
   const [isServerRunning, setIsServerRunning] = useState(false);
   const [showConsole, setShowConsole] = useState(false);
 
   // --- Search / filter ---
-  const [titleSearch, setTitleSearch] = useState("");
+  const [titleSearch] = useState("");
 
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
@@ -268,7 +268,7 @@ export default function CodeExplorer() {
   function collectRunnableProjects(nodes: CodeFile[]): CodeFile[] {
     const projects: CodeFile[] = [];
 
-    function walk(list: CodeFile[], isRoot: boolean = false) {
+    function walk(list: CodeFile[], _isRoot: boolean = false) {
       for (const node of list) {
         if (node.children && node.children.length > 0) {
           const hasPackageJson = node.children.some((c) => c.name === "package.json");
@@ -571,7 +571,7 @@ export default function CodeExplorer() {
         const devProc = await webcontainer.spawn("npm", ["run", cmd], { cwd });
         devProc.output.pipeTo(new WritableStream({ write: (d) => addLog(d) }));
 
-        webcontainer.on("server-ready", (port, url) => {
+        webcontainer.on("server-ready", (_port, url) => {
           addLog(`✅ Ready: ${url}`);
           addLog("🎉 Project is live!");
           setPreviewUrl(url);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CodeFile } from "../type/file";
+import type { CodeFile } from "../type/file";
 
 interface Props {
   file: CodeFile;

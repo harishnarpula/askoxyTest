@@ -20,7 +20,6 @@ interface AttachedFile {
 }
 
 const CHAT_URL = `${BASE_URL}/vibecode-service/claude/chat`;
-const FILE_URL = `${BASE_URL}/vibecode-service/claude/chat/file`;
 
 const ANTHROPIC_MODELS = [
   { id: "claude-opus-4-6", label: "Claude Opus 4.6", desc: "Most capable" },
@@ -170,44 +169,6 @@ function renderInline(text: string, isUser: boolean): React.ReactNode[] {
   if (last < text.length) parts.push(text.slice(last));
 
   return parts;
-}
-
-function startsWithEmoji(s: string): boolean {
-  const trimmed = s.trim();
-  if (!trimmed) return false;
-  const cp = trimmed.codePointAt(0);
-  if (cp === undefined) return false;
-  return (
-    (cp >= 0x1f300 && cp <= 0x1faff) || // Misc symbols, emoticons, transport, etc.
-    (cp >= 0x2600 && cp <= 0x27bf) || // Misc symbols & dingbats
-    (cp >= 0xfe00 && cp <= 0xfe0f) || // Variation selectors
-    cp === 0x200d // ZWJ
-  );
-}
-
-// A proper markdown table row: starts AND ends with |, and has 2+ cells
-function isTableRow(s: string): boolean {
-  const t = s.trim();
-  if (!t.startsWith("|") || !t.endsWith("|")) return false;
-  return t.split("|").length - 2 >= 2;
-}
-
-function _renderCodeBlock(lang: string, code: string, key: string) {
-  return (
-    <div
-      key={key}
-      className="my-3 rounded-xl overflow-hidden border border-slate-200"
-    >
-      {lang && (
-        <div className="bg-slate-100 px-3 py-1 text-[10px] font-mono text-slate-500 border-b border-slate-200 uppercase tracking-wider">
-          {lang}
-        </div>
-      )}
-      <pre className="bg-slate-950 text-slate-100 text-[12px] font-mono p-4 overflow-x-auto leading-relaxed">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
 }
 
 function MarkdownContent({
