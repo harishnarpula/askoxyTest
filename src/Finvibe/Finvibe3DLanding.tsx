@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ── Utility
 const clamp = (v: number, min: number, max: number): number =>
   Math.min(Math.max(v, min), max);
 
-// ── Types
+
 interface Particle {
   x: number; y: number; r: number; dx: number; dy: number;
   color: string; alpha: number;
