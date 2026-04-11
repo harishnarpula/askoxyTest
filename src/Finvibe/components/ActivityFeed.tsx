@@ -1,4 +1,4 @@
-import { GenerationResult, PipelineStep } from "../type/types";
+import type { GenerationResult, PipelineStep } from "../type/types";
 import { FileExplorer } from "./FileExplorer";
 
 interface Props {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { CodeFile } from "../type/file";
-import { fetchProjects, fetchProjectTitles, fetchProjectFiles, fetchFileContent } from "../hooks/driveApi";
+import { fetchProjects, fetchFileContent } from "../hooks/driveApi";
 import { getWebContainer } from "../services/webcontainer";
 import { WebContainer } from "@webcontainer/api";
 import { loadProjectStructure } from "../services/autoLoadFiles";
@@ -14,7 +14,7 @@ export default function CodeExplorer() {
   const [titles, setTitles] = useState<string[]>([]);
   const [loadingTitles, setLoadingTitles] = useState(true);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [, setSelectedProjectId] = useState<string | null>(null);
   const [view, setView] = useState<View>("titles");
   const [, setLoadProgress] = useState<LoadProgress | null>(null);
 
