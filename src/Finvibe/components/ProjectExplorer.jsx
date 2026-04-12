@@ -1,11 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchProjects } from "../hooks/driveApi";
+import { fetchProjects } from "../api/driveApi";
 
 import Layout from "../components/Layout";
 import FileTree from "../components/FileTree";
 import CodeViewer from "../components/CodeViewer";
-import Loader from "../components/Loader";
 
 export default function ProjectExplorer() {
 
@@ -31,7 +30,7 @@ export default function ProjectExplorer() {
 
   }, [id]);
 
-  if (loading) return <Loader />;
+  if (loading) return <div className="loader">Loading...</div>;
 
   return (
 

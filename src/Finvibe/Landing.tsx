@@ -5,49 +5,102 @@ import { Sidebar } from "./components/Sidebar";
 import { LandingView } from "./components/LandingView";
 import { CodeView } from "./components/CodeView";
 import { PipelineView } from "./components/PipelineView";
-import type{ GenerationResult } from "./type/types";
+import type { GenerationResult } from "./type/types";
 
 export default function Landing() {
   const {
-    steps, result, partialResult, chatMessage, running, paused, error,
-    stepTokens, prompt, clarificationQuestion, history, run, answerQuestion,
+    steps,
+    result,
+    partialResult,
+    partialResultRef,
+    chatMessage,
+    running,
+    paused,
+    error,
+    stepTokens,
+    prompt,
+    clarificationQuestion,
+    history,
+    run,
+    answerQuestion,
   } = usePipeline();
 
   const location = useLocation();
   const mode: "banking" | "insurance" =
-    (location.state as any)?.mode === "insurance" || location.pathname === "/insurvibe-code-builder"
+    (location.state as any)?.mode === "insurance" ||
+    location.pathname === "/insurvibe-code-builder"
       ? "insurance"
       : "banking";
 
   const hasEverStartedRef = useRef(false);
-  if (running || history.length > 0 || steps.some(s => s.status !== "idle")) {
+  if (running || history.length > 0 || steps.some((s) => s.status !== "idle")) {
     hasEverStartedRef.current = true;
   }
   const hasStarted = hasEverStartedRef.current;
 
-  const [codeViewResult, setCodeViewResult] = useState<GenerationResult | null>(null);
-  const [codeViewTab, setCodeViewTab] = useState<"backend" | "frontend" | "database" | undefined>(undefined);
+  const [codeViewResult, setCodeViewResult] = useState<GenerationResult | null>(
+    null,
+  );
+  const [codeViewTab, setCodeViewTab] = useState<
+    "backend" | "frontend" | "database" | undefined
+  >(undefined);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
 
-  const handleViewCode = (result: GenerationResult, tab?: "backend" | "frontend" | "database") => {
-    const hasFiles = result.backend.length > 0 || result.frontend.length > 0 || result.database.length > 0;
-    if (!hasFiles) return;
-    setCodeViewResult(result);
+  const handleViewCode = (
+    passed: GenerationResult,
+    tab?: "backend" | "frontend" | "database",
+  ) => {
+    const latest = partialResultRef.current;
+    const effective: GenerationResult = {
+      backend:
+        passed.backend.length > 0
+          ? passed.backend
+          : (result?.backend?.length ?? 0) > 0
+            ? result!.backend
+            : (latest.backend ?? []),
+      frontend:
+        passed.frontend.length > 0
+          ? passed.frontend
+          : (result?.frontend?.length ?? 0) > 0
+            ? result!.frontend
+            : (latest.frontend ?? []),
+      database:
+        passed.database.length > 0
+          ? passed.database
+          : (result?.database?.length ?? 0) > 0
+            ? result!.database
+            : (latest.database ?? []),
+    };
+    setCodeViewResult(effective);
     setCodeViewTab(tab);
   };
-
   return (
     <div
       className="h-screen flex overflow-hidden"
-      style={{ background: "#F8F9FC", fontFamily: "'DM Sans','Helvetica Neue',system-ui,sans-serif" }}
+      style={{
+        background: "#F8F9FC",
+        fontFamily: "'DM Sans','Helvetica Neue',system-ui,sans-serif",
+      }}
     >
-     
-
-      <Sidebar running={running} result={result} codeViewResult={codeViewResult} selectedBank={selectedBank} onSelectBank={setSelectedBank} mode={mode} />
+      <Sidebar
+        running={running}
+        result={result}
+        codeViewResult={codeViewResult}
+        selectedBank={selectedBank}
+        onSelectBank={setSelectedBank}
+        mode={mode}
+      />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         {codeViewResult ? (
-          <CodeView result={codeViewResult} defaultTab={codeViewTab} onBack={() => { setCodeViewResult(null); setCodeViewTab(undefined); }} />
+          <CodeView
+            result={codeViewResult}
+            defaultTab={codeViewTab}
+            onBack={() => {
+              setCodeViewResult(null);
+              setCodeViewTab(undefined);
+            }}
+          />
         ) : !hasStarted ? (
           <LandingView
             running={running}

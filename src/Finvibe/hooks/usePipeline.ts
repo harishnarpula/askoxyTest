@@ -75,10 +75,13 @@ function streamStepSSE(sessionId: string, stepName: string, u: LocalUpdater): Pr
               const payload = JSON.parse(json);
               if (lastEvent === "step") {
                 u.updateStep(payload.step, { status: payload.status, data: payload.data, label: payload.label });
-                if (payload.status === "completed" && payload.data?.fileList?.length) {
-                  if (payload.label === "Backend Generation")  u.setPartial(p => ({ ...p, backend:  payload.data.fileList }));
-                  if (payload.label === "Frontend Generation") u.setPartial(p => ({ ...p, frontend: payload.data.fileList }));
-                  if (payload.label === "Database Generation") u.setPartial(p => ({ ...p, database: payload.data.fileList }));
+                if (payload.status === "completed") {
+                  const files = payload.data?.fileList || payload.data?.files;
+                  if (Array.isArray(files) && files.length > 0) {
+                    if (payload.label === "Backend Generation")  u.setPartial(p => ({ ...p, backend: files }));
+                    if (payload.label === "Frontend Generation") u.setPartial(p => ({ ...p, frontend: files }));
+                    if (payload.label === "Database Generation") u.setPartial(p => ({ ...p, database: files }));
+                  }
                 }
               } else if (lastEvent === "token") {
                 u.appendToken(payload.step, payload.text);
@@ -87,18 +90,13 @@ function streamStepSSE(sessionId: string, stepName: string, u: LocalUpdater): Pr
               } else if (lastEvent === "clarification-waiting") {
                 resolve({ done: true, waitingForAnswer: true }); return;
               } else if (lastEvent === "done") {
-                // If payload has all three generation arrays it's the final done
-                // If it only has some (e.g. just backend), treat it like step_done and continue
-                const isFullResult =
-                  Array.isArray(payload?.backend) &&
-                  Array.isArray(payload?.frontend) &&
-                  Array.isArray(payload?.database) &&
-                  (payload.backend.length > 0 || payload.frontend.length > 0 || payload.database.length > 0);
-                if (isFullResult) {
-                  resolve({ done: true, result: payload }); return;
-                } else {
-                  resolve({ done: false }); return;
-                }
+                const backend  = Array.isArray(payload?.backend)  ? payload.backend  : [];
+                const frontend = Array.isArray(payload?.frontend) ? payload.frontend : [];
+                const database = Array.isArray(payload?.database) ? payload.database : [];
+                if (backend.length > 0)  u.setPartial(p => ({ ...p, backend }));
+                if (frontend.length > 0) u.setPartial(p => ({ ...p, frontend }));
+                if (database.length > 0) u.setPartial(p => ({ ...p, database }));
+                resolve({ done: true, result: { backend, frontend, database } }); return;
               } else if (lastEvent === "chat") {
                 resolve({ done: true, chat: payload.message }); return;
               } else if (lastEvent === "step_done") {
@@ -128,6 +126,7 @@ export function usePipeline() {
   const [clarificationQuestion, setClarificationQuestion] = useState<(ClarificationQuestion & { index: number; total: number }) | null>(null);
   const [history, setHistory] = useState<ConversationTurn[]>([]);
   const sessionIdRef = useRef<string | null>(null);
+  const partialResultRef = useRef<Partial<GenerationResult>>({});
 
   const updateStep = useCallback((stepNum: number, patch: Partial<PipelineStep>) => {
     setSteps(prev => prev.map(s => s.step === stepNum ? { ...s, ...patch } : s));
@@ -137,11 +136,25 @@ export function usePipeline() {
     setStepTokens(prev => ({ ...prev, [stepNum]: (prev[stepNum] ?? "") + text }));
   }, []);
 
+  // Keeps partialResultRef in sync so run() fallback can read the latest value synchronously
+  const setPartialResultSynced = useCallback((updater: (prev: Partial<GenerationResult>) => Partial<GenerationResult>) => {
+    setPartialResult(prev => {
+      const next = updater(prev);
+      partialResultRef.current = next;
+      return next;
+    });
+  }, []);
+
   const run = useCallback(async (userPrompt: string) => {
-    // Reset UI for new run
+    const hasActiveData = steps.some(s => s.status !== "idle") || result || Object.keys(stepTokens).length > 0 || chatMessage;
+    if (hasActiveData && prompt) {
+      setHistory(prev => [...prev, { prompt, steps, stepTokens, result, partialResult, chatMessage, error }]);
+    }
+
     setSteps(buildInitialSteps());
     setResult(null);
     setPartialResult({});
+    partialResultRef.current = {};
     setChatMessage(null);
     setError(null);
     setStepTokens({});
@@ -149,26 +162,15 @@ export function usePipeline() {
     setPrompt(userPrompt);
     setRunning(true);
 
-    // Local accumulators — track synchronously to avoid React async state race
-    let localSteps = buildInitialSteps();
-    let localTokens: StepTokensMap = {};
     let localPartial: Partial<GenerationResult> = {};
     let localResult: GenerationResult | null = null;
-    let localChat: string | null = null;
-    let localError: string | null = null;
 
     const u: LocalUpdater = {
-      updateStep: (stepNum, patch) => {
-        localSteps = localSteps.map(s => s.step === stepNum ? { ...s, ...patch } : s);
-        updateStep(stepNum, patch);
-      },
-      appendToken: (stepNum, text) => {
-        localTokens = { ...localTokens, [stepNum]: (localTokens[stepNum] ?? "") + text };
-        appendToken(stepNum, text);
-      },
+      updateStep: (stepNum, patch) => updateStep(stepNum, patch),
+      appendToken: (stepNum, text) => appendToken(stepNum, text),
       setPartial: (updater) => {
         localPartial = updater(localPartial);
-        setPartialResult(updater);
+        setPartialResultSynced(updater);
       },
       setClarification: (q) => setClarificationQuestion(q),
     };
@@ -186,24 +188,18 @@ export function usePipeline() {
       for (const step of STEPS) {
         const r = await streamStepSSE(sessionId, step.name, u);
         if (r.chat) {
-          localChat = r.chat;
           setChatMessage(r.chat);
+          // immediately archive this greeting turn into history
+          setHistory(prev => [...prev, { prompt: userPrompt, steps: buildInitialSteps(), stepTokens: {}, result: null, partialResult: {}, chatMessage: r.chat!, error: null }]);
+          setChatMessage(null);
+          setPrompt("");
           break;
         }
-        if (r.waitingForAnswer) {
-          setPaused(true);
-          setRunning(false);
-          return;
-        }
-        if (r.done && r.result) {
-          localResult = r.result;
-          setResult(r.result);
-          break;
-        }
+        if (r.waitingForAnswer) { setPaused(true); setRunning(false); return; }
+        if (r.done && r.result) { localResult = r.result; setResult(r.result); break; }
       }
 
-      // If loop completed all steps but no explicit done event with full result,
-      // build the final result from accumulated partialResult
+      // Fallback 1: use synchronously-tracked localPartial
       if (!localResult && (localPartial.backend?.length || localPartial.frontend?.length || localPartial.database?.length)) {
         localResult = {
           backend:  localPartial.backend  ?? [],
@@ -212,23 +208,24 @@ export function usePipeline() {
         };
         setResult(localResult);
       }
+
+      // Fallback 2: read from ref (catches React async batching edge cases)
+      if (!localResult) {
+        const latest = partialResultRef.current;
+        if (latest.backend?.length || latest.frontend?.length || latest.database?.length) {
+          setResult({
+            backend:  latest.backend  ?? [],
+            frontend: latest.frontend ?? [],
+            database: latest.database ?? [],
+          });
+        }
+      }
     } catch (err: unknown) {
-      localError = err instanceof Error ? err.message : "Unknown error";
-      setError(localError);
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
 
     setRunning(false);
-    // Push completed turn to history with accurate local state
-    setHistory(prev => [...prev, {
-      prompt: userPrompt,
-      steps: localSteps,
-      stepTokens: localTokens,
-      result: localResult,
-      partialResult: localPartial,
-      chatMessage: localChat,
-      error: localError,
-    }]);
-  }, [updateStep, appendToken]);
+  }, [updateStep, appendToken, setPartialResultSynced, steps, result, stepTokens, prompt, partialResult, chatMessage, error]);
 
   const answerQuestion = useCallback(async (answer: string) => {
     const sessionId = sessionIdRef.current;
@@ -265,17 +262,26 @@ export function usePipeline() {
             const payload = JSON.parse(json);
             if (lastEvent === "step") {
               updateStep(payload.step, { status: payload.status, data: payload.data, label: payload.label });
-              if (payload.status === "completed" && payload.data?.fileList?.length) {
-                if (payload.label === "Backend Generation")  setPartialResult(prev => ({ ...prev, backend:  payload.data.fileList }));
-                if (payload.label === "Frontend Generation") setPartialResult(prev => ({ ...prev, frontend: payload.data.fileList }));
-                if (payload.label === "Database Generation") setPartialResult(prev => ({ ...prev, database: payload.data.fileList }));
+              if (payload.status === "completed") {
+                const files = payload.data?.fileList || payload.data?.files;
+                if (Array.isArray(files) && files.length > 0) {
+                  if (payload.label === "Backend Generation")  setPartialResultSynced(prev => ({ ...prev, backend: files }));
+                  if (payload.label === "Frontend Generation") setPartialResultSynced(prev => ({ ...prev, frontend: files }));
+                  if (payload.label === "Database Generation") setPartialResultSynced(prev => ({ ...prev, database: files }));
+                }
               }
             } else if (lastEvent === "token") {
               appendToken(payload.step, payload.text);
             } else if (lastEvent === "clarification-question") {
               setClarificationQuestion({ ...payload.question, index: payload.index, total: payload.total });
             } else if (lastEvent === "done") {
-              setResult(payload);
+              const backend  = Array.isArray(payload?.backend)  ? payload.backend  : [];
+              const frontend = Array.isArray(payload?.frontend) ? payload.frontend : [];
+              const database = Array.isArray(payload?.database) ? payload.database : [];
+              if (backend.length > 0)  setPartialResultSynced(prev => ({ ...prev, backend }));
+              if (frontend.length > 0) setPartialResultSynced(prev => ({ ...prev, frontend }));
+              if (database.length > 0) setPartialResultSynced(prev => ({ ...prev, database }));
+              setResult({ backend, frontend, database });
               setRunning(false);
               return;
             } else if (lastEvent === "error") {
@@ -293,10 +299,10 @@ export function usePipeline() {
       setError(err.message);
       setRunning(false);
     }
-  }, [updateStep, appendToken]);
+  }, [updateStep, appendToken, setPartialResultSynced]);
 
   const completedSteps = steps.filter(s => s.status === "completed").length;
   const progress = Math.round((completedSteps / STEPS.length) * 100);
 
-  return { steps, result, partialResult, chatMessage, running, paused, error, progress, stepTokens, prompt, clarificationQuestion, history, run, answerQuestion };
+  return { steps, result, partialResult, partialResultRef, chatMessage, running, paused, error, progress, stepTokens, prompt, clarificationQuestion, history, run, answerQuestion };
 }

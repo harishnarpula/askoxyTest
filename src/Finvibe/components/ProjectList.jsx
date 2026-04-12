@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchProjects } from "../hooks/driveApi";
+import { fetchProjects } from "../api/driveApi";
 
 export default function ProjectList() {
   const [projects, setProjects] = useState([]);

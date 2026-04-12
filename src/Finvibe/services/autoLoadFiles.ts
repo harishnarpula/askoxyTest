@@ -1,4 +1,4 @@
-import type{ CodeFile } from "../type/file";
+import type { CodeFile } from "../type/file";
 import { fetchProjectChildren, fetchFolderFiles, fetchFileContent } from "../hooks/driveApi";
 
 export interface LoadProgress {

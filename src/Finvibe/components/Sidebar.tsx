@@ -1,4 +1,4 @@
-import type{ GenerationResult } from "../type/types";
+import type { GenerationResult } from "../type/types";
 
 const BANKING_CAPABILITIES = [
   { icon: "🏦", label: "Local Area Banks", sub: "Regional banking services" },

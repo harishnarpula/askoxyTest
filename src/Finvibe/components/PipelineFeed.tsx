@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type{ PipelineStep, GenerationResult, CodeFile } from "../type/types";
+import type { PipelineStep, GenerationResult, CodeFile } from "../type/types";
 import type { StepTokensMap, ConversationTurn } from "../hooks/usePipeline";
 
 type CodeTab = "backend" | "frontend" | "database";
@@ -37,6 +37,84 @@ const STEP_META: Record<string, { icon: string; accent: string; summary: (data: 
 };
 
 const CODE_STEPS = new Set(["Backend Generation", "Frontend Generation", "Database Generation"]);
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Extract files from a completed step's data.
+ * The step data may carry { fileList: CodeFile[] } or { files: CodeFile[] | number }.
+ */
+function extractFilesFromStep(step: PipelineStep | undefined): CodeFile[] {
+  if (!step || step.status !== "completed") return [];
+  const data = step.data as any;
+  // console.log('[extractFilesFromStep]', { 
+  //   label: step.label, 
+  //   data, 
+  //   dataKeys: data ? Object.keys(data) : [],
+  //   hasFileList: !!data?.fileList,
+  //   hasFiles: !!data?.files,
+  //   fileListType: typeof data?.fileList,
+  //   filesType: typeof data?.files,
+  //   fileListIsArray: Array.isArray(data?.fileList),
+  //   filesIsArray: Array.isArray(data?.files),
+  //   filesLength: Array.isArray(data?.files) ? data.files.length : 0,
+  //   firstFile: Array.isArray(data?.files) && data.files.length > 0 ? data.files[0] : null,
+  //   firstFileKeys: Array.isArray(data?.files) && data.files.length > 0 ? Object.keys(data.files[0]) : []
+  // });
+  if (Array.isArray(data?.fileList) && data.fileList.length > 0) return data.fileList;
+  if (Array.isArray(data?.files) && data.files.length > 0) return data.files;
+  return [];
+}
+
+/**
+ * Build a GenerationResult from whatever sources are available,
+ * prioritising: result → partialResult → step.data.fileList/files
+ */
+function buildResult(
+  steps: PipelineStep[],
+  partialResult: Partial<GenerationResult>,
+  result: GenerationResult | null
+): GenerationResult {
+  const findStep = (label: string) =>
+    steps.find(s => s.label.split(" (")[0] === label && s.status === "completed");
+
+  const backendStep = findStep("Backend Generation");
+  const frontendStep = findStep("Frontend Generation");
+  const databaseStep = findStep("Database Generation");
+
+  const backend =
+    (result?.backend?.length  ? result.backend  : null) ??
+    (partialResult?.backend?.length ? partialResult.backend : null) ??
+    extractFilesFromStep(backendStep);
+
+  const frontend =
+    (result?.frontend?.length ? result.frontend : null) ??
+    (partialResult?.frontend?.length ? partialResult.frontend : null) ??
+    extractFilesFromStep(frontendStep);
+
+  const database =
+    (result?.database?.length ? result.database : null) ??
+    (partialResult?.database?.length ? partialResult.database : null) ??
+    extractFilesFromStep(databaseStep);
+
+  // console.log('[buildResult]', {
+  //   resultBackend: result?.backend?.length ?? 0,
+  //   resultFrontend: result?.frontend?.length ?? 0,
+  //   resultDatabase: result?.database?.length ?? 0,
+  //   partialBackend: partialResult?.backend?.length ?? 0,
+  //   partialFrontend: partialResult?.frontend?.length ?? 0,
+  //   partialDatabase: partialResult?.database?.length ?? 0,
+  //   finalBackend: backend?.length ?? 0,
+  //   finalFrontend: frontend?.length ?? 0,
+  //   finalDatabase: database?.length ?? 0,
+  // });
+
+  return {
+    backend:  backend  ?? [],
+    frontend: frontend ?? [],
+    database: database ?? [],
+  };
+}
 
 // ── Collapsed output viewer ───────────────────────────────────────────────────
 
@@ -89,7 +167,8 @@ function TokenStream({ tokens, accent }: { tokens: string; accent: string }) {
 // ── Single step card ──────────────────────────────────────────────────────────
 
 function StepCard({
-  step, idx, isLastStep, tokens, expandedSteps, toggleStep, partialResult, result, onViewCode,
+  step, idx, isLastStep, tokens, expandedSteps, toggleStep,
+  steps, partialResult, result, onViewCode,
 }: {
   step: PipelineStep;
   idx: number;
@@ -97,8 +176,10 @@ function StepCard({
   tokens: string;
   expandedSteps: Set<number>;
   toggleStep: (i: number) => void;
-  partialResult?: Partial<GenerationResult>;
-  result?: GenerationResult | null;
+  /** All steps in the current turn — needed to build the full result */
+  steps: PipelineStep[];
+  partialResult: Partial<GenerationResult>;
+  result: GenerationResult | null;
   onViewCode: (r: GenerationResult, tab?: CodeTab) => void;
 }) {
   const isActive = step.status === "streaming";
@@ -116,31 +197,9 @@ function StepCard({
     return "backend";
   };
 
-  // Only this step's files — read from step.data.fileList first (always in sync),
-  // then fall back to partialResult/result
-  const getThisStepFiles = (): CodeFile[] => {
-    const tab = getTabForStep();
-    const fromStepData = (step.data as any)?.fileList;
-    if (Array.isArray(fromStepData) && fromStepData.length > 0) return fromStepData;
-    if (partialResult?.[tab]?.length) return partialResult[tab]!;
-    if (result?.[tab]?.length) return result[tab];
-    return [];
-  };
-
-  // Build full result for CodeView — all accumulated files so far
-  const buildViewResult = (): GenerationResult => {
-    const getFiles = (tab: "backend" | "frontend" | "database"): CodeFile[] => {
-      const fromStepData = tab === getTabForStep() ? (step.data as any)?.fileList : undefined;
-      if (Array.isArray(fromStepData) && fromStepData.length > 0) return fromStepData;
-      if (partialResult?.[tab]?.length) return partialResult[tab]!;
-      if (result?.[tab]?.length) return result[tab];
-      return [];
-    };
-    return {
-      backend:  getFiles("backend"),
-      frontend: getFiles("frontend"),
-      database: getFiles("database"),
-    };
+  const handleViewCode = () => {
+    const fullResult = buildResult(steps, partialResult, result);
+    onViewCode(fullResult, getTabForStep());
   };
 
   return (
@@ -211,9 +270,9 @@ function StepCard({
                 </button>
               )}
 
-              {isCodeStep && getThisStepFiles().length > 0 && (
+              {isCodeStep && (
                 <button
-                  onClick={() => onViewCode(buildViewResult(), getTabForStep())}
+                  onClick={handleViewCode}
                   className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all text-white"
                   style={{ background: `linear-gradient(135deg, ${accent}AA, ${accent})`, boxShadow: `0 0 10px ${accent}30` }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = "0.85"}
@@ -244,36 +303,30 @@ function StepCard({
   );
 }
 
-// ── Single conversation turn ───────────────────────────────────────────────────
+// ── Single conversation turn (history) ────────────────────────────────────────
 
-function ConversationTurnView({ turn, onViewCode }: { turn: ConversationTurn; onViewCode: (r: GenerationResult, tab?: CodeTab) => void }) {
+function ConversationTurnView({ turn, onViewCode }: {
+  turn: ConversationTurn;
+  onViewCode: (r: GenerationResult, tab?: CodeTab) => void;
+}) {
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
 
-  const visibleSteps: PipelineStep[] = turn.chatMessage ? [] : turn.steps.filter((s: PipelineStep) => s.status !== "idle");
+  const visibleSteps: PipelineStep[] = turn.steps.filter((s: PipelineStep) => s.status !== "idle");
 
   const toggleStep = (idx: number) =>
     setExpandedSteps(prev => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n; });
 
+  // Build a single consolidated result for this turn
+  const displayResult = buildResult(turn.steps, turn.partialResult, turn.result);
+  const totalFiles = displayResult.backend.length + displayResult.frontend.length + displayResult.database.length;
+
   const completedLabels = new Set(
     turn.steps.filter((s: PipelineStep) => s.status === "completed").map((s: PipelineStep) => s.label.split(" (")[0])
   );
-  const backendDone  = completedLabels.has("Backend Generation");
-  const frontendDone = completedLabels.has("Frontend Generation");
-  const databaseDone = completedLabels.has("Database Generation");
-
-  const displayResult: GenerationResult | null = turn.result ?? (() => {
-    const getStepFiles = (label: string) => {
-      const s = turn.steps.find(st => st.label.split(" (")[0] === label);
-      const fromData = (s?.data as any)?.fileList;
-      return Array.isArray(fromData) && fromData.length > 0 ? fromData : [];
-    };
-    const b = backendDone  ? (turn.partialResult.backend?.length  ? turn.partialResult.backend  : getStepFiles("Backend Generation"))  : [];
-    const f = frontendDone ? (turn.partialResult.frontend?.length ? turn.partialResult.frontend : getStepFiles("Frontend Generation")) : [];
-    const d = databaseDone ? (turn.partialResult.database?.length ? turn.partialResult.database : getStepFiles("Database Generation")) : [];
-    return (b.length || f.length || d.length) ? { backend: b, frontend: f, database: d } : null;
-  })();
-
-  const totalFiles = displayResult ? displayResult.backend.length + displayResult.frontend.length + displayResult.database.length : 0;
+  const hasAnyCodeStep =
+    completedLabels.has("Backend Generation") ||
+    completedLabels.has("Frontend Generation") ||
+    completedLabels.has("Database Generation");
 
   return (
     <div className="flex flex-col gap-2">
@@ -301,23 +354,35 @@ function ConversationTurnView({ turn, onViewCode }: { turn: ConversationTurn; on
       )}
 
       {visibleSteps.map((step: PipelineStep, idx: number) => (
-        <StepCard key={step.step} step={step} idx={idx}
+        <StepCard
+          key={step.step}
+          step={step}
+          idx={idx}
           isLastStep={idx === visibleSteps.length - 1}
           tokens={turn.stepTokens[step.step] ?? ""}
-          expandedSteps={expandedSteps} toggleStep={toggleStep}
+          expandedSteps={expandedSteps}
+          toggleStep={toggleStep}
+          steps={turn.steps}
           partialResult={turn.partialResult}
           result={turn.result}
-          onViewCode={onViewCode} />
+          onViewCode={onViewCode}
+        />
       ))}
 
-      {displayResult && (
+      {hasAnyCodeStep && totalFiles > 0 && (
         <div className="mt-1">
           <div
             className="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-200"
             style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)" }}
             onClick={() => onViewCode(displayResult)}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.32)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.18)"; }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.1)";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.32)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.06)";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.18)";
+            }}
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(16,185,129,0.14)", border: "1px solid rgba(16,185,129,0.22)" }}>
@@ -357,18 +422,42 @@ function ConversationTurnView({ turn, onViewCode }: { turn: ConversationTurn; on
 
 // ── In-progress live turn ─────────────────────────────────────────────────────
 
-function LiveTurnView({ steps, stepTokens, partialResult, result, prompt, onViewCode }: {
+function LiveTurnView({
+  steps, stepTokens, partialResult, result, prompt, error, chatMessage, onViewCode,
+}: {
   steps: PipelineStep[];
   stepTokens: StepTokensMap;
   partialResult: Partial<GenerationResult>;
   result: GenerationResult | null;
   prompt: string;
+  error: string | null;
+  chatMessage: string | null;
   onViewCode: (r: GenerationResult, tab?: CodeTab) => void;
 }) {
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
   const visibleSteps = steps.filter(s => s.status !== "idle");
   const toggleStep = (idx: number) =>
     setExpandedSteps(prev => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n; });
+
+  const doneLabels = new Set(
+    steps.filter(s => s.status === "completed").map(s => s.label.split(" (")[0])
+  );
+  const backendDone  = doneLabels.has("Backend Generation");
+  const frontendDone = doneLabels.has("Frontend Generation");
+  const databaseDone = doneLabels.has("Database Generation");
+  const allDone = backendDone && frontendDone && databaseDone;
+
+  const activeStep = steps.find(s => s.status === "streaming");
+  const isGenerating = activeStep &&
+    ["Backend Generation", "Frontend Generation", "Database Generation"]
+      .includes(activeStep.label.split(" (")[0]);
+
+  // Always build from all available sources so the count is accurate
+  const builtResult = buildResult(steps, partialResult, result);
+  const backendFiles  = builtResult.backend.length;
+  const frontendFiles = builtResult.frontend.length;
+  const databaseFiles = builtResult.database.length;
+  const totalFiles = backendFiles + frontendFiles + databaseFiles;
 
   return (
     <div className="flex flex-col gap-2">
@@ -381,44 +470,171 @@ function LiveTurnView({ steps, stepTokens, partialResult, result, prompt, onView
         </div>
       )}
 
+      {chatMessage && (
+        <div className="px-4 py-3 rounded-2xl text-sm"
+          style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.22)", color: "#1D4ED8" }}>
+          💬 {chatMessage}
+        </div>
+      )}
+
+      {error && (
+        <div className="px-4 py-3 rounded-2xl text-sm font-medium"
+          style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>
+          ❌ {error}
+        </div>
+      )}
+
       {visibleSteps.map((step, idx) => (
-        <StepCard key={step.step} step={step} idx={idx}
+        <StepCard
+          key={step.step}
+          step={step}
+          idx={idx}
           isLastStep={idx === visibleSteps.length - 1}
           tokens={stepTokens[step.step] ?? ""}
-          expandedSteps={expandedSteps} toggleStep={toggleStep}
+          expandedSteps={expandedSteps}
+          toggleStep={toggleStep}
+          steps={steps}
           partialResult={partialResult}
           result={result}
-          onViewCode={onViewCode} />
+          onViewCode={onViewCode}
+        />
       ))}
 
-      {(() => {
-        const doneLabels = new Set(steps.filter(s => s.status === "completed").map(s => s.label.split(" (")[0]));
-        const completedFiles =
-          (doneLabels.has("Backend Generation")  ? (partialResult.backend?.length  ?? 0) : 0) +
-          (doneLabels.has("Frontend Generation") ? (partialResult.frontend?.length ?? 0) : 0) +
-          (doneLabels.has("Database Generation") ? (partialResult.database?.length ?? 0) : 0);
-        const activeStep = steps.find(s => s.status === "streaming");
-        const isGenerating = activeStep && ["Backend Generation", "Frontend Generation", "Database Generation"].includes(activeStep.label.split(" (")[0]);
-        if (!isGenerating && completedFiles === 0) return null;
+      {/* Per-layer "View Code" buttons as each generation step completes */}
+      {(isGenerating || totalFiles > 0) && (
+        <div className="flex flex-col gap-2">
+          {isGenerating && (
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl"
+              style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.22)" }}>
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0" />
+              <span className="text-xs text-blue-600 font-medium flex-1">
+                {`Generating ${activeStep!.label.split(" (")[0].replace(" Generation", "")}…`}
+                {totalFiles > 0 ? ` · ${totalFiles} files ready` : ""}
+              </span>
+            </div>
+          )}
 
-        return (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl mt-0.5"
-            style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.22)" }}>
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0" />
-            <span className="text-xs text-blue-600 font-medium flex-1">
-              {isGenerating ? `Generating ${activeStep!.label.split(" (")[0].replace(" Generation", "")}…` : "Generating…"}
-              {completedFiles > 0 ? ` · ${completedFiles} files done` : ""}
-            </span>
-          </div>
-        );
-      })()}
+          {backendDone && backendFiles > 0 && (
+            <PartialCodeBanner
+              icon="⚙️" label="Backend" fileCount={backendFiles}
+              accent="#10B981" bg="rgba(16,185,129,0.06)" border="rgba(16,185,129,0.18)"
+              gradient="linear-gradient(135deg, #10B981, #059669)"
+              shadow="rgba(16,185,129,0.25)"
+              onClick={() => onViewCode(builtResult, "backend")}
+            />
+          )}
+          {frontendDone && frontendFiles > 0 && (
+            <PartialCodeBanner
+              icon="🎨" label="Frontend" fileCount={frontendFiles}
+              accent="#8B5CF6" bg="rgba(139,92,246,0.06)" border="rgba(139,92,246,0.18)"
+              gradient="linear-gradient(135deg, #8B5CF6, #7C3AED)"
+              shadow="rgba(139,92,246,0.25)"
+              onClick={() => onViewCode(builtResult, "frontend")}
+            />
+          )}
+          {databaseDone && databaseFiles > 0 && (
+            <PartialCodeBanner
+              icon="🗄️" label="Database" fileCount={databaseFiles}
+              accent="#38BDF8" bg="rgba(56,189,248,0.06)" border="rgba(56,189,248,0.18)"
+              gradient="linear-gradient(135deg, #38BDF8, #0EA5E9)"
+              shadow="rgba(56,189,248,0.25)"
+              onClick={() => onViewCode(builtResult, "database")}
+            />
+          )}
+
+          {allDone && totalFiles > 0 && (
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all mt-1"
+              style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.24)" }}
+              onClick={() => onViewCode(builtResult)}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.12)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.36)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.08)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.24)";
+              }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "rgba(16,185,129,0.16)", border: "1px solid rgba(16,185,129,0.28)" }}>
+                <span className="text-base">📦</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold" style={{ color: "#0A0E1A" }}>All Files Generated</span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                    style={{ background: "#E8ECF4", color: "#6B7A99" }}>
+                    {totalFiles} files
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 mt-0.5">
+                  {backendFiles  > 0 && <span className="text-[10px]" style={{ color: "#6B7A99" }}>⚙️ {backendFiles} backend</span>}
+                  {frontendFiles > 0 && <span className="text-[10px]" style={{ color: "#6B7A99" }}>🎨 {frontendFiles} frontend</span>}
+                  {databaseFiles > 0 && <span className="text-[10px]" style={{ color: "#6B7A99" }}>🗄️ {databaseFiles} database</span>}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <span className="text-xs font-semibold text-emerald-600">Complete</span>
+                <div className="ml-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5"
+                  style={{ background: "linear-gradient(135deg, #10B981, #059669)" }}>
+                  View All Code
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5h6M5 2l3 3-3 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Reusable partial-completion banner ────────────────────────────────────────
+
+function PartialCodeBanner({
+  icon, label, fileCount, accent, bg, border, gradient, shadow, onClick,
+}: {
+  icon: string; label: string; fileCount: number;
+  accent: string; bg: string; border: string;
+  gradient: string; shadow: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl"
+      style={{ background: bg, border: `1px solid ${border}` }}>
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+        style={{ background: `${accent}24`, border: `1px solid ${accent}38` }}>
+        <span className="text-sm">{icon}</span>
+      </div>
+      <div className="flex-1">
+        <span className="text-xs font-semibold" style={{ color: "#0A0E1A" }}>{label} Generated</span>
+        <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded-full"
+          style={{ background: "#E8ECF4", color: "#6B7A99" }}>
+          {fileCount} files
+        </span>
+      </div>
+      <button
+        onClick={onClick}
+        className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white flex items-center gap-1.5 transition-all"
+        style={{ background: gradient, boxShadow: `0 2px 8px ${shadow}` }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = "0.85"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = "1"}>
+        View Code →
+      </button>
     </div>
   );
 }
 
 // ── Main PipelineFeed ─────────────────────────────────────────────────────────
 
-export function PipelineFeed({ steps, stepTokens, result, partialResult, running, paused, prompt, history, onViewCode }: Props) {
+export function PipelineFeed({
+  steps, stepTokens, result, partialResult, running, paused,
+  error, chatMessage, prompt, history, onViewCode,
+}: Omit<Props, 'hasPendingClarification'> & { hasPendingClarification?: boolean }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -433,11 +649,17 @@ export function PipelineFeed({ steps, stepTokens, result, partialResult, running
           <ConversationTurnView key={i} turn={turn} onViewCode={onViewCode} />
         ))}
 
-        {(running || paused) && (
+        {(running || paused || error) && (
           <LiveTurnView
-            steps={steps} stepTokens={stepTokens}
-            partialResult={partialResult} result={result} prompt={prompt}
-            onViewCode={onViewCode} />
+            steps={steps}
+            stepTokens={stepTokens}
+            partialResult={partialResult}
+            result={result}
+            prompt={prompt}
+            error={error}
+            chatMessage={chatMessage}
+            onViewCode={onViewCode}
+          />
         )}
 
         <div ref={bottomRef} />
