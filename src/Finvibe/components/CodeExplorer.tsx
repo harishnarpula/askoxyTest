@@ -188,10 +188,16 @@ export default function CodeExplorer() {
     const files: CodeFile[] = [];
 
     function traverse(node: CodeFile) {
-      if (node.children === null || node.hasChildren === false) {
-        files.push(node);
-      } else if (node.children && node.children.length > 0) {
+      const isFolder =
+        node.hasChildren === true ||
+        (Array.isArray(node.children) && node.children.length > 0) ||
+        node.mimeType === "folder" ||
+        node.type === "folder";
+
+      if (isFolder && Array.isArray(node.children)) {
         node.children.forEach(child => traverse(child));
+      } else if (!isFolder) {
+        files.push(node);
       }
     }
 

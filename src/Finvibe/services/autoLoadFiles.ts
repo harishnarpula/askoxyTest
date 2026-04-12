@@ -34,6 +34,7 @@ export async function loadProjectStructure(
     if (item.hasChildren === true) {
       // This is a FOLDER - hit /folder/{id}/files to get complete structure
       const completeStructure = await fetchFolderFiles(item.id);
+      console.log(`[driveApi] folder "${item.name}" files:`, JSON.stringify(completeStructure, null, 2));
       
       const folderWithStructure = {
         ...item,
@@ -103,20 +104,23 @@ export async function loadProjectStructure(
   return { tree: processedItems, fileCache };
 }
 
-// Recursively collect all files (where children === null or hasChildren === false) from the structure
+// Recursively collect all files from the structure
 function collectAllFiles(items: CodeFile[]): CodeFile[] {
   const files: CodeFile[] = [];
-  
+
   for (const item of items) {
-    // Check both children === null and hasChildren === false to identify files
-    if (item.children === null || item.hasChildren === false) {
-      // This is a file
-      files.push(item);
-    } else if (item.children && Array.isArray(item.children) && item.children.length > 0) {
-      // This is a folder with children, recurse
+    const isFolder =
+      item.hasChildren === true ||
+      (Array.isArray(item.children) && item.children.length > 0) ||
+      item.mimeType === "folder" ||
+      item.type === "folder";
+
+    if (isFolder && Array.isArray(item.children) && item.children.length > 0) {
       files.push(...collectAllFiles(item.children));
+    } else if (!isFolder) {
+      files.push(item);
     }
   }
-  
+
   return files;
 }
