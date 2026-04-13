@@ -254,11 +254,10 @@ export default function CodeExplorer() {
 
               <button
                 onClick={() => setShowPreview(true)}
-                disabled={tree.length === 0}
+                disabled={loadingTree || tree.length === 0}
                 className="w-full px-2 py-2 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{background:"linear-gradient(135deg,rgba(0,245,255,.18),rgba(124,58,237,.12))",border:"1px solid rgba(0,245,255,.3)"}}
-              >
-                ▶ Run Project
+                style={{background:"linear-gradient(135deg,rgba(0,245,255,.18),rgba(124,58,237,.12))",border:"1px solid rgba(0,245,255,.3)"}}>
+                {loadingTree ? "⏳ Loading…" : "▶ Run Project"}
               </button>
             </div>
 

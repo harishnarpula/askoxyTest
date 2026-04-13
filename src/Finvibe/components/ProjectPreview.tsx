@@ -130,6 +130,13 @@ function findFrontendFolder(topLevel: CodeFile[]): CodeFile | null {
     const childNames = n.children.map(c => c.name.toLowerCase());
     if (childNames.includes("package.json")) return n;
   }
+  // Pass 5: any folder that isn't explicitly backend/db
+  for (const n of topLevel) {
+    if (!Array.isArray(n.children)) continue;
+    if (BACKEND_NAMES.some(bn => n.name.toLowerCase().includes(bn))) continue;
+    if (DB_NAMES.some(dn => n.name.toLowerCase().includes(dn))) continue;
+    if (n.children.length > 0) return n;
+  }
   return null;
 }
 
@@ -149,16 +156,12 @@ function detectStartCmd(wcFiles: Record<string, any>): string {
 let wcInstance: WebContainer | null = null;
 
 async function getWC(): Promise<WebContainer> {
-  if (!wcInstance) {
-    if (typeof crossOriginIsolated === "undefined" || !crossOriginIsolated) {
-      throw new Error(
-        "Cross-Origin Isolation is not active. " +
-        "The server must send: Cross-Origin-Opener-Policy: same-origin " +
-        "and Cross-Origin-Embedder-Policy: require-corp"
-      );
-    }
-    wcInstance = await WebContainer.boot();
+  // Tear down previous instance so a fresh container is used per project
+  if (wcInstance) {
+    try { wcInstance.teardown(); } catch { /* ignore */ }
+    wcInstance = null;
   }
+  wcInstance = await WebContainer.boot({ coep: "credentialless" });
   return wcInstance;
 }
 
@@ -177,8 +180,16 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
     setTimeout(() => logsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 30);
   };
 
+  // Capture props at mount time — never re-run on prop changes
+  const mountRef = useRef({ projectTitle, tree, fileCache });
+
   useEffect(() => {
     let cancelled = false;
+    // Snapshot at effect start — safe because button is disabled until loading is complete
+    const snapshot = mountRef.current;
+    const projectTitle = snapshot.projectTitle;
+    const tree = snapshot.tree;
+    const fileCache = snapshot.fileCache;
 
     async function run() {
       try {
@@ -186,7 +197,6 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         addLog(`🔍 Analysing project: ${projectTitle}`);
 
         // ── Unwrap single root wrapper if present
-        // e.g. tree = [{ name: "MyProject", children: [backend, frontend, database] }]
         let topLevel = tree;
         if (
           tree.length === 1 &&
@@ -207,29 +217,43 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         }
 
         // ── Find frontend folder
-        const frontendNode = findFrontendFolder(topLevel);
-        if (!frontendNode) {
-          if (!cancelled) {
-            setErrorMsg(
-              `Could not find a frontend folder in: ${topLevel.map(n => n.name).join(", ")}. ` +
-              `Looking for folders named: ${FRONTEND_NAMES.join(", ")} or containing vite.config / package.json.`
-            );
-            setStatus("error");
+        // If top-level already contains package.json / index.html it IS the frontend root
+        const topLevelNames = topLevel.map(n => n.name.toLowerCase());
+        const isRootFrontend =
+          topLevelNames.includes("package.json") ||
+          topLevelNames.some(n => n.startsWith("vite.config")) ||
+          topLevelNames.some(n => n.startsWith("next.config")) ||
+          topLevelNames.includes("index.html");
+
+        let targetNodes: CodeFile[];
+        let detectedName: string;
+
+        if (isRootFrontend) {
+          targetNodes = topLevel;
+          detectedName = projectTitle;
+          addLog(`✅ Frontend detected at root level`);
+        } else {
+          const frontendNode = findFrontendFolder(topLevel);
+          if (!frontendNode) {
+            if (!cancelled) {
+              const msg = `Could not find a frontend folder. Top-level items: ${topLevel.map(n => n.name).join(", ")}`;
+              addLog(`❌ ${msg}`);
+              setErrorMsg(msg);
+              setStatus("error");
+            }
+            return;
           }
-          return;
+          targetNodes = frontendNode.children ?? [];
+          detectedName = frontendNode.name;
+          addLog(`✅ Frontend folder detected: "${frontendNode.name}"`);
         }
 
-        addLog(`✅ Frontend folder detected: "${frontendNode.name}"`);
-        if (!cancelled) setDetectedFolder(frontendNode.name);
-
-        // ── Build WC file tree from frontend folder's children
-        setStatus("loading");
-        addLog("📦 Building file map from frontend folder…");
-
-        const targetNodes = frontendNode.children ?? [];
+        if (!cancelled) setDetectedFolder(detectedName);
         if (targetNodes.length === 0) {
           if (!cancelled) {
-            setErrorMsg(`Frontend folder "${frontendNode.name}" has no files. Wait for loading to complete.`);
+            const msg = `Frontend "${detectedName}" has no files. Wait for loading to complete.`;
+            addLog(`❌ ${msg}`);
+            setErrorMsg(msg);
             setStatus("error");
           }
           return;
@@ -252,7 +276,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         // ── Boot WebContainer
         addLog("🚀 Booting WebContainer…");
         const wc = await getWC();
-        if (cancelled) return;
+        if (cancelled) { try { wc.teardown(); } catch { /* ignore */ } return; }
 
         // ── Mount
         addLog("📁 Mounting files…");
@@ -263,10 +287,11 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         setStatus("installing");
         addLog("📦 Running npm install…");
         const install = await wc.spawn("npm", ["install"]);
-        install.output.pipeTo(new WritableStream({ write: chunk => addLog(chunk.trim()) }));
+        install.output.pipeTo(new WritableStream({ write: chunk => { if (!cancelled) addLog(chunk.trim()); } }));
         const installCode = await install.exit;
+        if (cancelled) return;
         if (installCode !== 0) {
-          if (!cancelled) { setErrorMsg("npm install failed — check logs below."); setStatus("error"); }
+          setErrorMsg("npm install failed — check logs below."); setStatus("error");
           return;
         }
         addLog("✅ npm install complete");
@@ -276,11 +301,11 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         const cmd = detectStartCmd(wcFiles);
         addLog(`🚀 Starting: npm run ${cmd}…`);
         const dev = await wc.spawn("npm", ["run", cmd]);
-        dev.output.pipeTo(new WritableStream({ write: chunk => addLog(chunk.trim()) }));
+        dev.output.pipeTo(new WritableStream({ write: chunk => { if (!cancelled) addLog(chunk.trim()); } }));
 
-        // ── Wait for server-ready
+        // ── Wait for server-ready — scoped to this exact wc instance
         wc.on("server-ready", (_port, url) => {
-          if (cancelled) return;
+          if (cancelled || wc !== wcInstance) return;
           addLog(`✅ Server ready → ${url}`);
           setPreviewUrl(url);
           setStatus("ready");
@@ -297,7 +322,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
 
     run();
     return () => { cancelled = true; };
-  }, [projectTitle, tree, fileCache]);
+  }, []); // run once on mount only
 
   useEffect(() => {
     if (previewUrl && iframeRef.current) {
@@ -401,8 +426,8 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
           />
         )}
 
-        {/* Logs panel — always visible during run, toggleable after */}
-        {(isRunning || showLogs) && (status !== "backend-only") && (status !== "error") && (
+        {/* Logs panel */}
+        {(isRunning || showLogs || status === "error") && (status !== "backend-only") && (
           <div style={{ height: status === "ready" && showLogs ? 180 : isRunning ? 220 : 0, borderTop: "1px solid #1a1f2e", background: "#0a0e1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden", transition: "height 0.2s" }}>
             <div style={{ padding: "4px 12px", borderBottom: "1px solid #1a1f2e", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
               <span style={{ fontSize: "0.68rem", color: "#00f5ff", fontFamily: "'Orbitron',monospace" }}>Console</span>
