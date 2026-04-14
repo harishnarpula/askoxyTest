@@ -180,21 +180,23 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
     setTimeout(() => logsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 30);
   };
 
-  // Capture props at mount time — never re-run on prop changes
+  // Always keep mountRef in sync with latest props
   const mountRef = useRef({ projectTitle, tree, fileCache });
+  useEffect(() => {
+    mountRef.current = { projectTitle, tree, fileCache };
+  });
 
   useEffect(() => {
+    // Only start when tree actually has data
+    if (tree.length === 0) return;
+
     let cancelled = false;
-    // Snapshot at effect start — safe because button is disabled until loading is complete
-    const snapshot = mountRef.current;
-    const projectTitle = snapshot.projectTitle;
-    const tree = snapshot.tree;
-    const fileCache = snapshot.fileCache;
 
     async function run() {
       try {
         setStatus("detecting");
-        addLog(`🔍 Analysing project: ${projectTitle}`);
+        const { projectTitle, tree, fileCache } = mountRef.current;
+        addLog(`[scan] Analysing project: ${projectTitle}`);
 
         // ── Unwrap single root wrapper if present
         let topLevel = tree;
@@ -204,10 +206,10 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
           tree[0].children.length > 0
         ) {
           topLevel = tree[0].children;
-          addLog(`📂 Root folder: ${tree[0].name}`);
+          addLog(`[dir] Root folder: ${tree[0].name}`);
         }
 
-        addLog(`📂 Top-level folders: ${topLevel.map(n => n.name).join(", ")}`);
+        addLog(`[dir] Top-level folders: ${topLevel.map(n => n.name).join(", ")}`);
 
         // ── Check backend-only
         const beCheck = isBackendOnlyProject(topLevel);
@@ -231,13 +233,13 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         if (isRootFrontend) {
           targetNodes = topLevel;
           detectedName = projectTitle;
-          addLog(`✅ Frontend detected at root level`);
+          addLog(`[ok] Frontend detected at root level`);
         } else {
           const frontendNode = findFrontendFolder(topLevel);
           if (!frontendNode) {
             if (!cancelled) {
               const msg = `Could not find a frontend folder. Top-level items: ${topLevel.map(n => n.name).join(", ")}`;
-              addLog(`❌ ${msg}`);
+              addLog(`[err] ${msg}`);
               setErrorMsg(msg);
               setStatus("error");
             }
@@ -245,14 +247,14 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
           }
           targetNodes = frontendNode.children ?? [];
           detectedName = frontendNode.name;
-          addLog(`✅ Frontend folder detected: "${frontendNode.name}"`);
+          addLog(`[ok] Frontend folder detected: "${frontendNode.name}"`);
         }
 
         if (!cancelled) setDetectedFolder(detectedName);
         if (targetNodes.length === 0) {
           if (!cancelled) {
             const msg = `Frontend "${detectedName}" has no files. Wait for loading to complete.`;
-            addLog(`❌ ${msg}`);
+            addLog(`[err] ${msg}`);
             setErrorMsg(msg);
             setStatus("error");
           }
@@ -270,50 +272,50 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
           return;
         }
 
-        addLog(`✅ ${fileCount} top-level entries ready`);
+        addLog(`[ok] ${fileCount} top-level entries ready`);
         if (cancelled) return;
 
         // ── Boot WebContainer
-        addLog("🚀 Booting WebContainer…");
+        addLog("[boot] Booting WebContainer...");
         const wc = await getWC();
         if (cancelled) { try { wc.teardown(); } catch { /* ignore */ } return; }
 
         // ── Mount
-        addLog("📁 Mounting files…");
+        addLog("[fs] Mounting files...");
         await wc.mount(wcFiles);
-        addLog("✅ Files mounted");
+        addLog("[ok] Files mounted");
 
-        // ── npm install
+        // -- npm install
         setStatus("installing");
-        addLog("📦 Running npm install…");
+        addLog("[pkg] Running npm install...");
         const install = await wc.spawn("npm", ["install"]);
         install.output.pipeTo(new WritableStream({ write: chunk => { if (!cancelled) addLog(chunk.trim()); } }));
         const installCode = await install.exit;
         if (cancelled) return;
         if (installCode !== 0) {
-          setErrorMsg("npm install failed — check logs below."); setStatus("error");
+          setErrorMsg("npm install failed - check logs below."); setStatus("error");
           return;
         }
-        addLog("✅ npm install complete");
+        addLog("[ok] npm install complete");
 
         // ── npm run dev/start
         setStatus("starting");
         const cmd = detectStartCmd(wcFiles);
-        addLog(`🚀 Starting: npm run ${cmd}…`);
+        addLog(`[run] Starting: npm run ${cmd}...`);
         const dev = await wc.spawn("npm", ["run", cmd]);
         dev.output.pipeTo(new WritableStream({ write: chunk => { if (!cancelled) addLog(chunk.trim()); } }));
 
         // ── Wait for server-ready — scoped to this exact wc instance
         wc.on("server-ready", (_port, url) => {
           if (cancelled || wc !== wcInstance) return;
-          addLog(`✅ Server ready → ${url}`);
+          addLog(`[ok] Server ready -> ${url}`);
           setPreviewUrl(url);
           setStatus("ready");
         });
 
       } catch (err: any) {
         if (!cancelled) {
-          addLog(`❌ ${err?.message ?? "Unknown error"}`);
+          addLog(`[err] ${err?.message ?? "Unknown error"}`);
           setErrorMsg(err?.message ?? "Unknown error");
           setStatus("error");
         }
@@ -322,7 +324,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
 
     run();
     return () => { cancelled = true; };
-  }, []); // run once on mount only
+  }, [tree]); // re-run when tree changes
 
   useEffect(() => {
     if (previewUrl && iframeRef.current) {
@@ -331,11 +333,11 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
   }, [previewUrl]);
 
   const statusLabel: Record<Status, string> = {
-    detecting:     "Detecting frontend…",
-    loading:       "Loading files…",
-    installing:    "Installing packages…",
-    starting:      "Starting dev server…",
-    ready:         "Running ✓",
+    detecting:     "Detecting frontend...",
+    loading:       "Loading files...",
+    installing:    "Installing packages...",
+    starting:      "Starting dev server...",
+    ready:         "Running",
     error:         "Error",
     "backend-only":"Backend only",
   };
@@ -347,10 +349,12 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
 
       {/* ── Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", borderBottom: "1px solid #1a1f2e", background: "rgba(0,245,255,.03)", flexShrink: 0 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg,#00f5ff,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>▶</div>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg,#00f5ff,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21" /></svg>
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: "'Orbitron',monospace", fontWeight: 800, fontSize: "0.78rem", background: "linear-gradient(90deg,#00f5ff,#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Live Preview{detectedFolder ? ` — ${detectedFolder}` : ""}
+            Live Preview{detectedFolder ? ` - ${detectedFolder}` : ""}
           </div>
           <div style={{ fontSize: "0.68rem", color: "#6c7a8a", marginTop: 1 }}>{projectTitle}</div>
         </div>
@@ -368,10 +372,11 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         </button>
 
         <button onClick={onClose}
-          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)", color: "#a0aec0", fontSize: "0.68rem", cursor: "pointer" }}
+          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)", color: "#a0aec0", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
           onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,.1)")}
           onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,.05)")}>
-          ✕ Close
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Restart
         </button>
       </div>
 
@@ -381,15 +386,16 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         {/* Backend-only */}
         {status === "backend-only" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: "0 32px" }}>
-            <div style={{ fontSize: "2.5rem" }}>🖥️</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#f59e0b" }}>Backend-Only Project</div>
             <div style={{ fontSize: "0.78rem", color: "#6c7a8a", maxWidth: 420, textAlign: "center", lineHeight: 1.7 }}>
               This is a <strong style={{ color: "#f59e0b" }}>{errorMsg}</strong> project.<br />
               Backend code cannot run in the browser.<br /><br />
               Only <strong style={{ color: "#00f5ff" }}>React / Vue / Angular / Vite / Next.js</strong> frontend projects can be previewed.
             </div>
-            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.78rem", cursor: "pointer" }}>
-              ← Go Back
+            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Go Back
             </button>
           </div>
         )}
@@ -397,11 +403,12 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         {/* Error */}
         {status === "error" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: "0 32px" }}>
-            <div style={{ fontSize: "2.5rem" }}>⚠️</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#ef4444" }}>Preview Failed</div>
             <div style={{ fontSize: "0.78rem", color: "#6c7a8a", maxWidth: 420, textAlign: "center", lineHeight: 1.7 }}>{errorMsg}</div>
-            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.78rem", cursor: "pointer" }}>
-              ← Go Back
+            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Go Back
             </button>
           </div>
         )}
@@ -411,7 +418,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
             <div style={{ width: 48, height: 48, border: "3px solid rgba(0,245,255,.15)", borderTopColor: "#00f5ff", borderRadius: "50%", animation: "wcSpin 0.9s linear infinite" }} />
             <div style={{ fontFamily: "'Orbitron',monospace", fontSize: "0.78rem", color: "#00f5ff" }}>{statusLabel[status]}</div>
-            <div style={{ fontSize: "0.7rem", color: "#6c7a8a" }}>This may take 30–60 seconds</div>
+            <div style={{ fontSize: "0.7rem", color: "#6c7a8a" }}>This may take 30-60 seconds</div>
           </div>
         )}
 
@@ -423,6 +430,21 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
             title="Live Preview"
             allow="cross-origin-isolated; clipboard-read; clipboard-write"
             sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
+            onLoad={() => {
+              try {
+                const doc = iframeRef.current?.contentDocument;
+                if (!doc) return;
+                const style = doc.createElement("style");
+                style.textContent = [
+                  "*:not(script):not(style) {",
+                  "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Emoji',",
+                  "    'Apple Color Emoji', 'Noto Color Emoji', 'Twemoji Mozilla',",
+                  "    'Helvetica Neue', Arial, sans-serif !important;",
+                  "}",
+                ].join("");
+                doc.head.appendChild(style);
+              } catch { /* cross-origin guard */ }
+            }}
           />
         )}
 
@@ -435,7 +457,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "6px 12px" }}>
               {logs.map((l, i) => (
-                <div key={i} style={{ fontFamily: "monospace", fontSize: "0.68rem", color: l.startsWith("❌") ? "#ef4444" : l.startsWith("✅") ? "#22c55e" : "#a0aec0", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{l}</div>
+                <div key={i} style={{ fontFamily: "monospace", fontSize: "0.68rem", color: l.startsWith("[err]") ? "#ef4444" : l.startsWith("[ok]") ? "#22c55e" : "#a0aec0", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{l}</div>
               ))}
               <div ref={logsEndRef} />
             </div>

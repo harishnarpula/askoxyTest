@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { CodeFile } from "../type/file";
 import { fetchProjects, fetchFileContent } from "../hooks/driveApi";
 import type { LoadProgress } from "../services/autoLoadFiles";
@@ -28,13 +28,15 @@ export default function CodeExplorer() {
   const [fileCache, setFileCache] = useState<Map<string, string>>(new Map());
 
   // --- Preview state ---
-  const [showPreview, setShowPreview] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
 
   // --- Search / filter ---
   const [_titleSearch, _setTitleSearch] = useState("");
 
   const [sidebarWidth, setSidebarWidth] = useState(280);
-  const [isResizing, setIsResizing] = useState(false);
+  const [codeWidth, setCodeWidth] = useState(380);
+  const [isResizing, setIsResizing] = useState<"sidebar" | "code" | null>(null);
+  const mainContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadTitles();
@@ -44,21 +46,18 @@ export default function CodeExplorer() {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
-      const newWidth = e.clientX;
-      if (newWidth >= 200 && newWidth <= 600) {
-        setSidebarWidth(newWidth);
+      if (isResizing === "sidebar") {
+        const newWidth = e.clientX;
+        if (newWidth >= 160 && newWidth <= 500) setSidebarWidth(newWidth);
+      } else if (isResizing === "code" && mainContentRef.current) {
+        const rect = mainContentRef.current.getBoundingClientRect();
+        const newWidth = e.clientX - rect.left;
+        if (newWidth >= 200 && newWidth <= rect.width - 300) setCodeWidth(newWidth);
       }
     };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
+    const handleMouseUp = () => setIsResizing(null);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -127,7 +126,7 @@ export default function CodeExplorer() {
     setOpenFiles([]);
     setFileContent("");
     setFileCache(new Map());
-    setShowPreview(false);
+    setPreviewKey(0);
     setLoadProgress(null);
   }
 
@@ -240,8 +239,8 @@ export default function CodeExplorer() {
 
           {/* ── Tree View ── */}
           <>
-            {/* Back button + Run */}
-            <div className="p-2 border-b border-[#1a1f2e] space-y-1.5" style={{background:"rgba(0,0,0,.2)"}}>
+            {/* Back button */}
+            <div className="p-2 border-b border-[#1a1f2e]" style={{background:"rgba(0,0,0,.2)"}}>
               <button
                 onClick={handleBackToTitles}
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[#a0aec0] hover:bg-[#1a1f2e] transition-colors"
@@ -250,14 +249,6 @@ export default function CodeExplorer() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 All Projects
-              </button>
-
-              <button
-                onClick={() => setShowPreview(true)}
-                disabled={loadingTree || tree.length === 0}
-                className="w-full px-2 py-2 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{background:"linear-gradient(135deg,rgba(0,245,255,.18),rgba(124,58,237,.12))",border:"1px solid rgba(0,245,255,.3)"}}>
-                {loadingTree ? "⏳ Loading…" : "▶ Run Project"}
               </button>
             </div>
 
@@ -297,26 +288,23 @@ export default function CodeExplorer() {
         </div>
       )}
 
-      {/* Resizer */}
+      {/* Resizer - sidebar */}
       {view === "tree" && (
         <div
-          className="w-1 bg-transparent hover:bg-[#00f5ff] cursor-col-resize transition-colors relative group"
-          onMouseDown={() => setIsResizing(true)}
+          className="w-1 bg-transparent hover:bg-[#00f5ff] cursor-col-resize transition-colors relative flex-shrink-0"
+          onMouseDown={() => setIsResizing("sidebar")}
         >
           <div className="absolute inset-0 w-3 -left-1" />
         </div>
       )}
 
       {/* ── Main Content ── */}
-      <div id="main-content" className="flex-1 flex flex-col overflow-hidden" style={{background:"#020414"}}>
-        {showPreview ? (
-          <ProjectPreview
-            projectTitle={selectedTitle ?? ""}
-            tree={fullTree.length > 0 ? fullTree : tree}
-            fileCache={fileCache}
-            onClose={() => setShowPreview(false)}
-          />
-        ) : selectedFile ? (
+      <div ref={mainContentRef} id="main-content" className="flex-1 flex overflow-hidden" style={{background:"#020414"}}>
+        {view === "tree" ? (
+          <>
+            {/* Code panel */}
+            <div className="flex flex-col overflow-hidden flex-shrink-0" style={{width: `${codeWidth}px`, minWidth: 0}}>
+        {selectedFile ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* VS Code-like Tab Bar */}
             {openFiles.length > 0 && (
@@ -341,7 +329,7 @@ export default function CodeExplorer() {
                         if (!isActive) e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      <span className="text-xs">{getFileIcon(file.name)}</span>
+                      <span className="flex-shrink-0">{getFileIcon(file.name)}</span>
                       <span
                         className="flex-1 text-xs font-medium truncate"
                         style={{color: isActive ? "#00f5ff" : "#a0aec0"}}
@@ -366,7 +354,7 @@ export default function CodeExplorer() {
             {/* File Header */}
             <div className="border-b border-[#1a1f2e] px-4 py-2 flex-shrink-0" style={{background:"rgba(0,245,255,.03)"}}>
               <div className="flex items-center gap-2.5">
-                <span className="text-base">{getFileIcon(selectedFile.name)}</span>
+                <span className="flex-shrink-0">{getFileIcon(selectedFile.name)}</span>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-white font-semibold text-xs" style={{fontFamily:"'Orbitron',monospace"}}>{selectedFile.name}</h2>
@@ -403,7 +391,7 @@ export default function CodeExplorer() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto" style={{background:"#0a0e1a"}}>
+            <div className="flex-1 overflow-hidden" style={{background:"#0a0e1a"}}>
               {loadingContent ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -440,6 +428,49 @@ export default function CodeExplorer() {
               </div>
             </div>
           </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center" style={{background:"#020414"}}>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded flex items-center justify-center mx-auto mb-3" style={{background:"rgba(0,245,255,.05)",border:"1px solid rgba(0,245,255,.2)"}}>
+                <svg className="w-8 h-8 text-[#00f5ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h2 className="text-sm font-semibold text-white mb-1" style={{fontFamily:"'Orbitron',monospace"}}>Select a File</h2>
+              <p className="text-[#6c7a8a] text-xs">Choose from <span className="font-semibold text-[#00f5ff]">{selectedTitle}</span> to view code</p>
+            </div>
+          </div>
+        )}
+            </div>
+
+            {/* Resizer - code/preview */}
+            <div
+              className="w-1 bg-transparent hover:bg-[#00f5ff] cursor-col-resize transition-colors relative flex-shrink-0"
+              onMouseDown={() => setIsResizing("code")}
+            >
+              <div className="absolute inset-0 w-3 -left-1" />
+            </div>
+
+            {/* Preview panel */}
+            <div className="flex flex-col overflow-hidden flex-1" style={{minWidth: 0}}>
+              {!loadingTree && tree.length > 0 ? (
+                <ProjectPreview
+                  key={previewKey}
+                  projectTitle={selectedTitle ?? ""}
+                  tree={fullTree.length > 0 ? fullTree : tree}
+                  fileCache={fileCache}
+                  onClose={() => setPreviewKey(k => k + 1)}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center" style={{background:"#020414"}}>
+                  <div className="text-center">
+                    <div className="w-10 h-10 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-[#6c7a8a] text-xs">Loading project...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
         ) : view === "titles" ? (
           <div className="flex-1 flex flex-col overflow-hidden" style={{background:"#020414"}}>
             {/* Header */}
@@ -519,19 +550,7 @@ export default function CodeExplorer() {
               </div>
             )}
           </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center" style={{background:"#020414"}}>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded flex items-center justify-center mx-auto mb-3" style={{background:"rgba(0,245,255,.05)",border:"1px solid rgba(0,245,255,.2)"}}>
-                <svg className="w-8 h-8 text-[#00f5ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-              </div>
-              <h2 className="text-sm font-semibold text-white mb-1" style={{fontFamily:"'Orbitron',monospace"}}>Select a File</h2>
-              <p className="text-[#6c7a8a] text-xs">Choose from <span className="font-semibold text-[#00f5ff]">{selectedTitle}</span> to view code</p>
-            </div>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -598,7 +617,13 @@ function TreeNode({ node, onFileClick, selectedFile, level, autoExpand = false, 
             </svg>
           )
         )}
-        <span className="text-sm">{isFolder ? (expanded ? "📂" : "📁") : getFileIcon(node.name)}</span>
+        <span className="text-sm flex-shrink-0">
+          {isFolder ? (
+            expanded
+              ? <svg width="13" height="13" viewBox="0 0 24 24" fill="#00f5ff" fillOpacity=".7" stroke="#00f5ff" strokeWidth="1.5"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" /></svg>
+              : <svg width="13" height="13" viewBox="0 0 24 24" fill="#6c7a8a" fillOpacity=".7" stroke="#6c7a8a" strokeWidth="1.5"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" /></svg>
+          ) : getFileIcon(node.name)}
+        </span>
         <span className="flex-1 text-xs font-normal truncate">{node.name}</span>
         {!isFolder && <span className="text-[9px] px-1 py-0.5 rounded font-medium" style={{background:"rgba(0,245,255,.1)",color:"#00f5ff"}}>{getFileExtension(node.name)}</span>}
         {isLoading && <span className="text-[9px] text-[#00f5ff]">Loading...</span>}
@@ -612,31 +637,18 @@ function TreeNode({ node, onFileClick, selectedFile, level, autoExpand = false, 
 
 function CodeBlock({ code }: { code: string; fileName?: string }) {
   const lines = code.split("\n");
-  const [hoveredLine, setHoveredLine] = useState<number | null>(null);
 
   return (
-    <div className="flex h-full w-full" style={{background:"#0a0e1a"}}>
-      <div className="text-right py-3 px-3 font-mono text-xs border-r select-none flex-shrink-0" style={{background:"rgba(0,0,0,.2)",color:"#6c7a8a",borderColor:"#1a1f2e",minWidth:"50px"}}>
-        {lines.map((_, i) => (
-          <div
-            key={i}
-            className="leading-5 px-1 transition-colors"
-            style={{
-              background: hoveredLine === i ? "rgba(0,245,255,.05)" : "transparent",
-              color: hoveredLine === i ? "#00f5ff" : "#6c7a8a"
-            }}
-            onMouseEnter={() => setHoveredLine(i)}
-            onMouseLeave={() => setHoveredLine(null)}
-          >
-            {i + 1}
-          </div>
-        ))}
-      </div>
-      <div className="flex-1 overflow-auto">
-        <pre
-          className="p-3 font-mono text-xs leading-5 min-h-full"
-          style={{color:"#e2e8f0"}}
-        >
+    <div className="overflow-auto h-full w-full" style={{background:"#0a0e1a"}}>
+      <div className="flex" style={{minWidth: "max-content"}}>
+        <div className="text-right py-3 px-3 font-mono text-xs border-r select-none flex-shrink-0 sticky left-0" style={{background:"rgba(0,0,0,.2)",color:"#6c7a8a",borderColor:"#1a1f2e",minWidth:"50px"}}>
+          {lines.map((_, i) => (
+            <div key={i} className="leading-5 px-1" style={{color:"#6c7a8a"}}>
+              {i + 1}
+            </div>
+          ))}
+        </div>
+        <pre className="py-3 px-3 font-mono text-xs leading-5 flex-1" style={{color:"#e2e8f0",margin:0}}>
           <code>{code}</code>
         </pre>
       </div>
@@ -644,13 +656,21 @@ function CodeBlock({ code }: { code: string; fileName?: string }) {
   );
 }
 
-function getFileIcon(name: string): string {
+function getFileIcon(name: string): React.ReactElement {
   const ext = name.split(".").pop()?.toLowerCase();
-  const icons: Record<string, string> = {
-    js: "🟨", jsx: "⚛️", ts: "🔷", tsx: "⚛️", java: "☕", py: "🐍",
-    html: "🌐", css: "🎨", json: "📋", md: "📝"
+  const color: Record<string, string> = {
+    js: "#f7df1e", jsx: "#61dafb", ts: "#3178c6", tsx: "#61dafb",
+    java: "#f89820", py: "#3572A5", html: "#e34c26", css: "#563d7c",
+    json: "#a0aec0", md: "#6c7a8a", xml: "#a0aec0", yml: "#a0aec0",
+    yaml: "#a0aec0", sql: "#336791", sh: "#89e051", bash: "#89e051",
   };
-  return icons[ext || ""] || "📄";
+  const c = color[ext || ""] || "#6c7a8a";
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+    </svg>
+  );
 }
 
 function getFileExtension(name: string): string {
