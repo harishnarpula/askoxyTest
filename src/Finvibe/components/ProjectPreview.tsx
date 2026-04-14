@@ -8,6 +8,9 @@ interface Props {
   tree: CodeFile[];
   fileCache: Map<string, string>;
   onClose: () => void;
+  onTogglePreview: () => void;
+  showCode: boolean;
+  onToggleCode: () => void;
 }
 
 type Status = "detecting" | "loading" | "installing" | "starting" | "ready" | "error" | "backend-only";
@@ -165,7 +168,7 @@ async function getWC(): Promise<WebContainer> {
   return wcInstance;
 }
 
-export default function ProjectPreview({ projectTitle, tree, fileCache, onClose }: Props) {
+export default function ProjectPreview({ projectTitle, tree, fileCache, onClose, onTogglePreview, showCode, onToggleCode }: Props) {
   const iframeRef   = useRef<HTMLIFrameElement>(null);
   const logsEndRef  = useRef<HTMLDivElement>(null);
   const [status, setStatus]               = useState<Status>("detecting");
@@ -333,11 +336,11 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
   }, [previewUrl]);
 
   const statusLabel: Record<Status, string> = {
-    detecting:     "Detecting frontend...",
+    detecting:     "Loading preview...",
     loading:       "Loading files...",
     installing:    "Installing packages...",
-    starting:      "Starting dev server...",
-    ready:         "Running",
+    starting:      "Starting preview...",
+    ready:         "Preview Ready",
     error:         "Error",
     "backend-only":"Backend only",
   };
@@ -354,7 +357,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: "'Orbitron',monospace", fontWeight: 800, fontSize: "0.78rem", background: "linear-gradient(90deg,#00f5ff,#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Live Preview{detectedFolder ? ` - ${detectedFolder}` : ""}
+            {isRunning ? "Loading Preview" : status === "ready" ? "Preview" : "Preview"}{detectedFolder ? ` — ${detectedFolder}` : ""}
           </div>
           <div style={{ fontSize: "0.68rem", color: "#6c7a8a", marginTop: 1 }}>{projectTitle}</div>
         </div>
@@ -369,6 +372,22 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose 
         <button onClick={() => setShowLogs(v => !v)}
           style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: showLogs ? "rgba(0,245,255,.1)" : "rgba(255,255,255,.05)", color: showLogs ? "#00f5ff" : "#a0aec0", fontSize: "0.68rem", cursor: "pointer" }}>
           {showLogs ? "Hide Logs" : "Show Logs"}
+        </button>
+
+        {!showCode && (
+          <button onClick={onToggleCode}
+            style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Code
+          </button>
+        )}
+
+        <button onClick={onTogglePreview}
+          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)", color: "#6c7a8a", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,.1)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,.05)")}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Hide Preview
         </button>
 
         <button onClick={onClose}
