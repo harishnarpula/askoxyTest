@@ -679,33 +679,34 @@ export default function CodeExplorer() {
               </div>
             )}
 
-            {/* Preview panel */}
-            {showPreview && (
-              <div className="flex flex-col overflow-hidden flex-1" style={{ minWidth: 0 }}>
-                {!loadingTree && tree.length > 0 ? (
-                  <ProjectPreview
-                    key={previewKey}
-                    projectTitle={selectedTitle ?? ""}
-                    tree={fullTree.length > 0 ? fullTree : tree}
-                    fileCache={fileCache}
-                    onClose={() => setPreviewKey((k) => k + 1)}
-                    onTogglePreview={() => setShowPreview(false)}
-                    showCode={showCode}
-                    onToggleCode={() => setShowCode((v) => !v)}
-                  />
-                ) : (
-                  <div
-                    className="flex-1 flex items-center justify-center"
-                    style={{ background: "#020414" }}
-                  >
-                    <div className="text-center">
-                      <div className="w-10 h-10 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mx-auto mb-3" />
-                      <p className="text-[#6c7a8a] text-xs">Loading Preview...</p>
-                    </div>
+            {/* Preview panel — always mounted to preserve WebContainer state */}
+            <div
+              className="flex flex-col overflow-hidden flex-1"
+              style={{ minWidth: 0, display: showPreview ? "flex" : "none" }}
+            >
+              {!loadingTree && tree.length > 0 ? (
+                <ProjectPreview
+                  key={previewKey}
+                  projectTitle={selectedTitle ?? ""}
+                  tree={fullTree.length > 0 ? fullTree : tree}
+                  fileCache={fileCache}
+                  onClose={() => setPreviewKey((k) => k + 1)}
+                  onTogglePreview={() => setShowPreview(false)}
+                  showCode={showCode}
+                  onToggleCode={() => setShowCode((v) => !v)}
+                />
+              ) : (
+                <div
+                  className="flex-1 flex items-center justify-center"
+                  style={{ background: "#020414" }}
+                >
+                  <div className="text-center">
+                    <div className="w-10 h-10 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-[#6c7a8a] text-xs">Loading Preview...</p>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
             {/* All panels hidden fallback */}
             {!showCode && !showPreview && (
