@@ -20,3 +20,19 @@ export interface StepToken {
   step: number;
   text: string;
 }
+
+export interface HistoryStep {
+  stepNumber: number;
+  stepName: string;
+  status: string;
+  details?: string;
+  data?: unknown;
+}
+
+export interface HistoryData {
+  userId: string;
+  sessionId: string;
+  timestamp: string;
+  steps: HistoryStep[];
+  generationResult?: GenerationResult;
+}

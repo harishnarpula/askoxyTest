@@ -468,20 +468,57 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
         )}
 
         {/* Logs panel */}
-        {(isRunning || showLogs || status === "error") && (status !== "backend-only") && (
-          <div style={{ height: status === "ready" && showLogs ? 180 : isRunning ? 220 : 0, borderTop: "1px solid #1a1f2e", background: "#0a0e1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden", transition: "height 0.2s" }}>
-            <div style={{ padding: "4px 12px", borderBottom: "1px solid #1a1f2e", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-              <span style={{ fontSize: "0.68rem", color: "#00f5ff", fontFamily: "'Orbitron',monospace" }}>Console</span>
-              <button onClick={() => setLogs([])} style={{ fontSize: "0.65rem", color: "#6c7a8a", background: "none", border: "none", cursor: "pointer" }}>Clear</button>
+        {(isRunning || showLogs || status === "error") && (status !== "backend-only") && (() => {
+          const consoleHeight = status === "ready" && showLogs ? 180 : isRunning ? 220 : 0;
+          return (
+            <div style={{ borderTop: "1px solid #1a1f2e", background: "#0a0e1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden", transition: "height 0.25s cubic-bezier(0.4,0,0.2,1)", height: showLogs ? consoleHeight : 32 }}>
+              {/* Console header with minimize arrow */}
+              <div
+                style={{ padding: "5px 12px", borderBottom: showLogs ? "1px solid #1a1f2e" : "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, cursor: "pointer", userSelect: "none" }}
+                onClick={() => setShowLogs(v => !v)}
+              >
+                {/* Terminal dot */}
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: isRunning ? "#00f5ff" : status === "error" ? "#ef4444" : "#22c55e", flexShrink: 0, boxShadow: isRunning ? "0 0 6px #00f5ff" : "none", display: "inline-block" }} />
+                <span style={{ fontSize: "0.68rem", color: "#00f5ff", fontFamily: "'Orbitron',monospace", flex: 1 }}>Console</span>
+                {logs.length > 0 && (
+                  <span style={{ fontSize: "0.6rem", color: "#6c7a8a", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 4, padding: "1px 6px" }}>
+                    {logs.length} lines
+                  </span>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setLogs([]); }}
+                  style={{ fontSize: "0.62rem", color: "#6c7a8a", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
+                  title="Clear logs"
+                >
+                  Clear
+                </button>
+                {/* Minimize / Maximize arrow */}
+                <div
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", transition: "background 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,245,255,.1)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,.04)")}
+                  title={showLogs ? "Minimize console" : "Expand console"}
+                >
+                  <svg
+                    width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1)", transform: showLogs ? "rotate(0deg)" : "rotate(180deg)" }}
+                  >
+                    <polyline points="18 15 12 9 6 15" />
+                  </svg>
+                </div>
+              </div>
+              {/* Log lines */}
+              {showLogs && (
+                <div style={{ flex: 1, overflowY: "auto", padding: "6px 12px" }}>
+                  {logs.map((l, i) => (
+                    <div key={i} style={{ fontFamily: "monospace", fontSize: "0.68rem", color: l.startsWith("[err]") ? "#ef4444" : l.startsWith("[ok]") ? "#22c55e" : "#a0aec0", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{l}</div>
+                  ))}
+                  <div ref={logsEndRef} />
+                </div>
+              )}
             </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "6px 12px" }}>
-              {logs.map((l, i) => (
-                <div key={i} style={{ fontFamily: "monospace", fontSize: "0.68rem", color: l.startsWith("[err]") ? "#ef4444" : l.startsWith("[ok]") ? "#22c55e" : "#a0aec0", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{l}</div>
-              ))}
-              <div ref={logsEndRef} />
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       <style>{`@keyframes wcSpin { to { transform: rotate(360deg); } }`}</style>
