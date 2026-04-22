@@ -20,19 +20,19 @@ export async function fetchProjectChildren(projectId: string): Promise<CodeFile[
 }
 
 export async function fetchFolderFiles(folderId: string): Promise<CodeFile[]> {
-  const response = await fetch(`${BASE_URL}vibecode-service/folder/${folderId}/files`);
+  const response = await fetch(`${BASE_URL}/vibecode-service/folder/${folderId}/files`);
   if (!response.ok) throw new Error(`Failed to fetch files for folder: ${folderId}`);
   return response.json();
 }
 
 export async function fetchProjectFiles(title: string): Promise<CodeFile[]> {
-  const response = await fetch(`${BASE_URL}vibecode-service/projects?title=${encodeURIComponent(title)}`);
+  const response = await fetch(`${BASE_URL}/vibecode-service/projects?title=${encodeURIComponent(title)}`);
   if (!response.ok) throw new Error(`Failed to fetch files for project: ${title}`);
   return response.json();
 }
 
 export async function fetchFileContent(fileId: string): Promise<string> {
-  const response = await fetch(`${BASE_URL}vibecode-service/file/${fileId}/content`);
+  const response = await fetch(`${BASE_URL}/vibecode-service/file/${fileId}/content`);
   if (!response.ok) throw new Error("Failed to fetch file content");
   return response.text();
 }
