@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { WebContainer } from "@webcontainer/api";
 import type { CodeFile } from "../type/file";
 import { fetchFileContent } from "../hooks/driveApi";
+import { ThemeToggleButton } from "./ThemeToggleButton";
+import type { ThemeMode } from "../hooks/useTheme";
 
 interface Props {
   projectTitle: string;
@@ -11,6 +13,8 @@ interface Props {
   onTogglePreview: () => void;
   showCode: boolean;
   onToggleCode: () => void;
+  theme?: ThemeMode;
+  onToggleTheme?: () => void;
 }
 
 type Status = "detecting" | "loading" | "installing" | "starting" | "ready" | "error" | "backend-only";
@@ -168,7 +172,7 @@ async function getWC(): Promise<WebContainer> {
   return wcInstance;
 }
 
-export default function ProjectPreview({ projectTitle, tree, fileCache, onClose, onTogglePreview, showCode, onToggleCode }: Props) {
+export default function ProjectPreview({ projectTitle, tree, fileCache, onClose, onTogglePreview, showCode, onToggleCode, theme, onToggleTheme }: Props) {
   const iframeRef   = useRef<HTMLIFrameElement>(null);
   const logsEndRef  = useRef<HTMLDivElement>(null);
   const [status, setStatus]               = useState<Status>("detecting");
@@ -348,52 +352,54 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
   const isRunning = ["detecting", "loading", "installing", "starting"].includes(status);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#020414" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--app-bg)" }}>
 
       {/* ── Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", borderBottom: "1px solid #1a1f2e", background: "rgba(0,245,255,.03)", flexShrink: 0 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg,#00f5ff,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", borderBottom: "1px solid var(--panel-border)", background: "var(--accent-muted-bg)", flexShrink: 0 }}>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg,var(--accent-primary),#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21" /></svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Orbitron',monospace", fontWeight: 800, fontSize: "0.78rem", background: "linear-gradient(90deg,#00f5ff,#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <div style={{ fontFamily: "'Orbitron',monospace", fontWeight: 800, fontSize: "0.78rem", background: "linear-gradient(90deg,var(--accent-primary),#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             {isRunning ? "Loading Preview" : status === "ready" ? "Preview" : "Preview"}{detectedFolder ? ` — ${detectedFolder}` : ""}
           </div>
-          <div style={{ fontSize: "0.68rem", color: "#6c7a8a", marginTop: 1 }}>{projectTitle}</div>
+          <div style={{ fontSize: "0.68rem", color: "var(--muted-text)", marginTop: 1 }}>{projectTitle}</div>
         </div>
 
         {/* Status */}
-        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: isRunning ? "#00f5ff" : status === "ready" ? "#22c55e" : "#ef4444", flexShrink: 0 }}>
-          {isRunning && <div style={{ width: 10, height: 10, border: "2px solid #00f5ff", borderTopColor: "transparent", borderRadius: "50%", animation: "wcSpin 0.7s linear infinite" }} />}
+        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: isRunning ? "var(--accent-primary)" : status === "ready" ? "#22c55e" : "#ef4444", flexShrink: 0 }}>
+          {isRunning && <div style={{ width: 10, height: 10, border: "2px solid var(--accent-primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "wcSpin 0.7s linear infinite" }} />}
           {status === "ready" && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />}
           {statusLabel[status]}
         </div>
 
+        {theme && onToggleTheme && <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />}
+
         <button onClick={() => setShowLogs(v => !v)}
-          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: showLogs ? "rgba(0,245,255,.1)" : "rgba(255,255,255,.05)", color: showLogs ? "#00f5ff" : "#a0aec0", fontSize: "0.68rem", cursor: "pointer" }}>
+          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid var(--surface-soft-border)", background: showLogs ? "var(--accent-soft)" : "var(--surface-soft)", color: showLogs ? "var(--accent-primary)" : "var(--subtle-text)", fontSize: "0.68rem", cursor: "pointer" }}>
           {showLogs ? "Hide Logs" : "Show Logs"}
         </button>
 
         {!showCode && (
           <button onClick={onToggleCode}
-            style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid var(--accent-border)", background: "var(--accent-soft-2)", color: "var(--accent-primary)", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             Code
           </button>
         )}
 
         <button onClick={onTogglePreview}
-          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)", color: "#6c7a8a", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,.1)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,.05)")}>
+          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid var(--surface-soft-border)", background: "var(--surface-soft)", color: "var(--muted-text)", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-soft-border)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "var(--surface-soft)")}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Hide Preview
         </button>
 
         <button onClick={onClose}
-          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)", color: "#a0aec0", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,.1)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,.05)")}>
+          style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid var(--surface-soft-border)", background: "var(--surface-soft)", color: "var(--subtle-text)", fontSize: "0.68rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-soft-border)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "var(--surface-soft)")}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Restart
         </button>
@@ -407,12 +413,12 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: "0 32px" }}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#f59e0b" }}>Backend-Only Project</div>
-            <div style={{ fontSize: "0.78rem", color: "#6c7a8a", maxWidth: 420, textAlign: "center", lineHeight: 1.7 }}>
+            <div style={{ fontSize: "0.78rem", color: "var(--muted-text)", maxWidth: 420, textAlign: "center", lineHeight: 1.7 }}>
               This is a <strong style={{ color: "#f59e0b" }}>{errorMsg}</strong> project.<br />
               Backend code cannot run in the browser.<br /><br />
-              Only <strong style={{ color: "#00f5ff" }}>React / Vue / Angular / Vite / Next.js</strong> frontend projects can be previewed.
+              Only <strong style={{ color: "var(--accent-primary)" }}>React / Vue / Angular / Vite / Next.js</strong> frontend projects can be previewed.
             </div>
-            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid var(--accent-border)", background: "var(--accent-soft-2)", color: "var(--accent-primary)", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
               Go Back
             </button>
@@ -424,8 +430,8 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: "0 32px" }}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#ef4444" }}>Preview Failed</div>
-            <div style={{ fontSize: "0.78rem", color: "#6c7a8a", maxWidth: 420, textAlign: "center", lineHeight: 1.7 }}>{errorMsg}</div>
-            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(0,245,255,.3)", background: "rgba(0,245,255,.08)", color: "#00f5ff", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: "0.78rem", color: "var(--muted-text)", maxWidth: 420, textAlign: "center", lineHeight: 1.7 }}>{errorMsg}</div>
+            <button onClick={onClose} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid var(--accent-border)", background: "var(--accent-soft-2)", color: "var(--accent-primary)", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
               Go Back
             </button>
@@ -435,9 +441,9 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
         {/* Loading spinner */}
         {isRunning && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-            <div style={{ width: 48, height: 48, border: "3px solid rgba(0,245,255,.15)", borderTopColor: "#00f5ff", borderRadius: "50%", animation: "wcSpin 0.9s linear infinite" }} />
-            <div style={{ fontFamily: "'Orbitron',monospace", fontSize: "0.78rem", color: "#00f5ff" }}>{statusLabel[status]}</div>
-            <div style={{ fontSize: "0.7rem", color: "#6c7a8a" }}>This may take 30-60 seconds</div>
+            <div style={{ width: 48, height: 48, border: "3px solid var(--accent-soft-2)", borderTopColor: "var(--accent-primary)", borderRadius: "50%", animation: "wcSpin 0.9s linear infinite" }} />
+            <div style={{ fontFamily: "'Orbitron',monospace", fontSize: "0.78rem", color: "var(--accent-primary)" }}>{statusLabel[status]}</div>
+            <div style={{ fontSize: "0.7rem", color: "var(--muted-text)" }}>This may take 30-60 seconds</div>
           </div>
         )}
 
@@ -471,36 +477,36 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
         {(isRunning || showLogs || status === "error") && (status !== "backend-only") && (() => {
           const consoleHeight = status === "ready" && showLogs ? 180 : isRunning ? 220 : 0;
           return (
-            <div style={{ borderTop: "1px solid #1a1f2e", background: "#0a0e1a", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden", transition: "height 0.25s cubic-bezier(0.4,0,0.2,1)", height: showLogs ? consoleHeight : 32 }}>
+            <div style={{ borderTop: "1px solid var(--panel-border)", background: "var(--panel-bg)", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden", transition: "height 0.25s cubic-bezier(0.4,0,0.2,1)", height: showLogs ? consoleHeight : 32 }}>
               {/* Console header with minimize arrow */}
               <div
-                style={{ padding: "5px 12px", borderBottom: showLogs ? "1px solid #1a1f2e" : "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, cursor: "pointer", userSelect: "none" }}
+                style={{ padding: "5px 12px", borderBottom: showLogs ? "1px solid var(--panel-border)" : "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0, cursor: "pointer", userSelect: "none" }}
                 onClick={() => setShowLogs(v => !v)}
               >
                 {/* Terminal dot */}
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: isRunning ? "#00f5ff" : status === "error" ? "#ef4444" : "#22c55e", flexShrink: 0, boxShadow: isRunning ? "0 0 6px #00f5ff" : "none", display: "inline-block" }} />
-                <span style={{ fontSize: "0.68rem", color: "#00f5ff", fontFamily: "'Orbitron',monospace", flex: 1 }}>Console</span>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: isRunning ? "var(--accent-primary)" : status === "error" ? "#ef4444" : "#22c55e", flexShrink: 0, boxShadow: isRunning ? "0 0 6px var(--accent-primary)" : "none", display: "inline-block" }} />
+                <span style={{ fontSize: "0.68rem", color: "var(--accent-primary)", fontFamily: "'Orbitron',monospace", flex: 1 }}>Console</span>
                 {logs.length > 0 && (
-                  <span style={{ fontSize: "0.6rem", color: "#6c7a8a", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 4, padding: "1px 6px" }}>
+                  <span style={{ fontSize: "0.6rem", color: "var(--muted-text)", background: "var(--surface-soft)", border: "1px solid var(--surface-soft-border-2)", borderRadius: 4, padding: "1px 6px" }}>
                     {logs.length} lines
                   </span>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); setLogs([]); }}
-                  style={{ fontSize: "0.62rem", color: "#6c7a8a", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
+                  style={{ fontSize: "0.62rem", color: "var(--muted-text)", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
                   title="Clear logs"
                 >
                   Clear
                 </button>
                 {/* Minimize / Maximize arrow */}
                 <div
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", transition: "background 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,245,255,.1)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,.04)")}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 5, background: "var(--surface-faint)", border: "1px solid var(--surface-soft-border-2)", transition: "background 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "var(--accent-soft)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "var(--surface-faint)")}
                   title={showLogs ? "Minimize console" : "Expand console"}
                 >
                   <svg
-                    width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--subtle-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                     style={{ transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1)", transform: showLogs ? "rotate(0deg)" : "rotate(180deg)" }}
                   >
                     <polyline points="18 15 12 9 6 15" />
@@ -511,7 +517,7 @@ export default function ProjectPreview({ projectTitle, tree, fileCache, onClose,
               {showLogs && (
                 <div style={{ flex: 1, overflowY: "auto", padding: "6px 12px" }}>
                   {logs.map((l, i) => (
-                    <div key={i} style={{ fontFamily: "monospace", fontSize: "0.68rem", color: l.startsWith("[err]") ? "#ef4444" : l.startsWith("[ok]") ? "#22c55e" : "#a0aec0", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{l}</div>
+                    <div key={i} style={{ fontFamily: "monospace", fontSize: "0.68rem", color: l.startsWith("[err]") ? "#ef4444" : l.startsWith("[ok]") ? "#22c55e" : "var(--subtle-text)", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{l}</div>
                   ))}
                   <div ref={logsEndRef} />
                 </div>

@@ -6,10 +6,18 @@ import type { LoadProgress } from "../services/autoLoadFiles";
 import { loadProjectStructure } from "../services/autoLoadFiles";
 import ProjectPreview from "./ProjectPreview";
 import { CodeView } from "./CodeView";
+import { ThemeToggleButton } from "./ThemeToggleButton";
+import type { ThemeMode } from "../hooks/useTheme";
+
 
 type View = "titles" | "tree";
 
-export default function CodeExplorer() {
+interface CodeExplorerProps {
+  onToggleTheme: () => void;
+  theme: ThemeMode;
+}
+
+export default function CodeExplorer({ onToggleTheme, theme }: CodeExplorerProps) {
   // --- Title-level state ---
   const [projects, setProjects] = useState<CodeFile[]>([]);
   const [titles, setTitles] = useState<string[]>([]);
@@ -49,6 +57,7 @@ export default function CodeExplorer() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
   const [historyProject, setHistoryProject] = useState<string>("");
+  const [loadingProject, setLoadingProject] = useState<string | null>(null);
   // CodeView state for history overlay
   const [historyCodeViewResult, setHistoryCodeViewResult] = useState<GenerationResult | null>(null);
   const [historyCodeTab, setHistoryCodeTab] = useState<"backend" | "frontend" | "database">("backend");
@@ -207,6 +216,7 @@ export default function CodeExplorer() {
   const handleExplore12Steps = async (projectName: string) => {
     setHighlightedTitle(projectName);
     setHighlightHistoryHeading(true);
+    setLoadingProject(projectName);
     setHistoryLoading(true);
     setHistoryError("");
     setShowHistoryView(false);
@@ -254,6 +264,7 @@ export default function CodeExplorer() {
       setShowHistoryView(true); // show overlay with error
     } finally {
       setHistoryLoading(false);
+      setLoadingProject(null);
     }
   };
 
@@ -337,7 +348,15 @@ export default function CodeExplorer() {
 
   // ─── RENDER ────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen bg-[#020414]" style={{ fontFamily: "'Sora',sans-serif" }}>
+    <div
+      className="flex h-screen"
+      style={{
+        position: "relative",
+        backgroundColor: "var(--app-bg)",
+        color: "var(--app-text)",
+        fontFamily: "'Sora',sans-serif",
+      }}
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800;900&family=Sora:wght@300;400;500;600&display=swap');
         @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
@@ -348,18 +367,18 @@ export default function CodeExplorer() {
       {view === "tree" && (
         <div
           id="sidebar-container"
-          className="bg-[#0a0e1a] border-r border-[#1a1f2e] flex flex-col relative"
+          className="bg-[var(--panel-bg)] border-r border-[var(--panel-border)] flex flex-col relative"
           style={{ width: `${sidebarWidth}px` }}
         >
           {/* Header */}
           <div
-            className="px-4 py-3 border-b border-[#1a1f2e]"
-            style={{ background: "rgba(0,245,255,.03)" }}
+            className="px-4 py-3 border-b border-[var(--panel-border)]"
+            style={{ background: "var(--accent-muted-bg)" }}
           >
             <div className="flex items-center gap-3">
               <div
                 className="w-8 h-8 rounded-md flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg,#00f5ff,#7c3aed)" }}
+                style={{ background: "linear-gradient(135deg,var(--accent-primary),#7c3aed)" }}
               >
                 <svg
                   className="w-4 h-4 text-white"
@@ -381,25 +400,26 @@ export default function CodeExplorer() {
                     fontFamily: "'Orbitron',monospace",
                     fontWeight: 800,
                     fontSize: "0.85rem",
-                    background: "linear-gradient(90deg,#00f5ff,#a855f7)",
+                    background: "linear-gradient(90deg,var(--accent-primary),#a855f7)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
                 >
                   OXYBFS.AI
                 </h1>
-                <p className="text-[#6c7a8a] text-[10px] font-medium mt-0.5">{selectedTitle}</p>
+                <p className="text-[var(--muted-text)] text-[10px] font-medium mt-0.5">{selectedTitle}</p>
               </div>
+              <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />
             </div>
 
 
           </div>
 
           {/* Back button */}
-          <div className="p-2 border-b border-[#1a1f2e]" style={{ background: "rgba(0,0,0,.2)" }}>
+          <div className="p-2 border-b border-[var(--panel-border)]" style={{ background: "var(--overlay-bg-strong)" }}>
             <button
               onClick={handleBackToTitles}
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[#a0aec0] hover:bg-[#1a1f2e] transition-colors"
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-[var(--subtle-text)] hover:bg-[var(--panel-border)] transition-colors"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -414,14 +434,14 @@ export default function CodeExplorer() {
           </div>
 
           {/* Panel toggle buttons */}
-          <div className="px-2 py-2 border-b border-[#1a1f2e] flex gap-1.5" style={{ background: "rgba(0,0,0,.15)" }}>
+          <div className="px-2 py-2 border-b border-[var(--panel-border)] flex gap-1.5" style={{ background: "var(--overlay-bg-soft)" }}>
             <button
               onClick={() => setShowCode((v) => !v)}
               className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[11px] font-medium transition-all"
               style={{
-                background: showCode ? "rgba(0,245,255,.1)" : "rgba(255,255,255,.03)",
-                border: `1px solid ${showCode ? "rgba(0,245,255,.35)" : "rgba(255,255,255,.07)"}`,
-                color: showCode ? "#00f5ff" : "#6c7a8a",
+                background: showCode ? "var(--accent-soft)" : "var(--surface-soft)",
+                border: `1px solid ${showCode ? "var(--accent-border-strong)" : "var(--surface-soft-border-2)"}`,
+                color: showCode ? "var(--accent-primary)" : "var(--muted-text)",
               }}
             >
               <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,9 +454,9 @@ export default function CodeExplorer() {
               onClick={() => setShowPreview((v) => !v)}
               className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-[11px] font-medium transition-all"
               style={{
-                background: showPreview ? "rgba(0,245,255,.1)" : "rgba(255,255,255,.03)",
-                border: `1px solid ${showPreview ? "rgba(0,245,255,.35)" : "rgba(255,255,255,.07)"}`,
-                color: showPreview ? "#00f5ff" : "#6c7a8a",
+                background: showPreview ? "var(--accent-soft)" : "var(--surface-soft)",
+                border: `1px solid ${showPreview ? "var(--accent-border-strong)" : "var(--surface-soft-border-2)"}`,
+                color: showPreview ? "var(--accent-primary)" : "var(--muted-text)",
               }}
             >
               <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -451,19 +471,19 @@ export default function CodeExplorer() {
           {/* File tree */}
           <div
             className="flex-1 overflow-y-auto p-2"
-            style={{ background: "rgba(0,0,0,.15)" }}
+            style={{ background: "var(--overlay-bg-soft)" }}
           >
             {loadingTree && tree.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-2.5">
-                <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin"></div>
-                <p className="text-[#6c7a8a] font-medium text-[10px]">Loading project...</p>
-                <p className="text-[#00f5ff] text-[10px]">{selectedTitle}</p>
+                <div className="w-8 h-8 border-2 border-[var(--panel-border)] border-t-[var(--accent-primary)] rounded-full animate-spin"></div>
+                <p className="text-[var(--muted-text)] font-medium text-[10px]">Loading project...</p>
+                <p className="text-[var(--accent-primary)] text-[10px]">{selectedTitle}</p>
               </div>
             ) : tree.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-2">
-                <div className="w-10 h-10 bg-[#1a1f2e] rounded flex items-center justify-center">
+                <div className="w-10 h-10 bg-[var(--panel-border)] rounded flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-[#6c7a8a]"
+                    className="w-5 h-5 text-[var(--muted-text)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -476,7 +496,7 @@ export default function CodeExplorer() {
                     />
                   </svg>
                 </div>
-                <p className="text-[#6c7a8a] text-[10px]">No files found</p>
+                <p className="text-[var(--muted-text)] text-[10px]">No files found</p>
               </div>
             ) : (
               <>
@@ -484,9 +504,9 @@ export default function CodeExplorer() {
                 <div
                   className="mb-2 px-2 py-1 rounded text-[9px] font-semibold"
                   style={{
-                    background: "rgba(0,245,255,.05)",
-                    color: "#00f5ff",
-                    border: "1px solid rgba(0,245,255,.2)",
+                    background: "var(--accent-faint)",
+                    color: "var(--accent-primary)",
+                    border: "1px solid var(--accent-border-soft)",
                   }}
                 >
                   {collectAllFiles(tree).length} files in project
@@ -503,7 +523,7 @@ export default function CodeExplorer() {
 
           {/* Sidebar resize handle */}
           <div
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-[#00f5ff] transition-colors"
+            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-[var(--accent-primary)] transition-colors"
             onMouseDown={() => setIsResizing("sidebar")}
           />
         </div>
@@ -514,7 +534,7 @@ export default function CodeExplorer() {
         ref={mainContentRef}
         id="main-content"
         className="flex-1 flex overflow-hidden"
-        style={{ background: "#020414" }}
+        style={{ background: "var(--app-bg)" }}
       >
         {view === "tree" ? (
           <>
@@ -529,8 +549,8 @@ export default function CodeExplorer() {
                     {/* Tab Bar */}
                     {openFiles.length > 0 && (
                       <div
-                        className="flex items-center border-b border-[#1a1f2e] overflow-x-auto flex-shrink-0"
-                        style={{ background: "rgba(0,0,0,.2)", scrollbarWidth: "thin" }}
+                        className="flex items-center border-b border-[var(--panel-border)] overflow-x-auto flex-shrink-0"
+                        style={{ background: "var(--overlay-bg-strong)", scrollbarWidth: "thin" }}
                       >
                         {openFiles.map((file) => {
                           const isActive = selectedFile?.id === file.id;
@@ -538,18 +558,18 @@ export default function CodeExplorer() {
                             <div
                               key={file.id}
                               onClick={() => handleTabClick(file)}
-                              className="flex items-center gap-2 px-3 py-2 border-r border-[#1a1f2e] cursor-pointer transition-colors group relative"
+                              className="flex items-center gap-2 px-3 py-2 border-r border-[var(--panel-border)] cursor-pointer transition-colors group relative"
                               style={{
-                                background: isActive ? "rgba(0,245,255,.05)" : "transparent",
+                                background: isActive ? "var(--accent-faint)" : "transparent",
                                 borderBottom: isActive
-                                  ? "2px solid #00f5ff"
+                                  ? "2px solid var(--accent-primary)"
                                   : "2px solid transparent",
                                 minWidth: "120px",
                                 maxWidth: "200px",
                               }}
                               onMouseEnter={(e) => {
                                 if (!isActive)
-                                  e.currentTarget.style.background = "rgba(255,255,255,.02)";
+                                  e.currentTarget.style.background = "var(--surface-faint)";
                               }}
                               onMouseLeave={(e) => {
                                 if (!isActive) e.currentTarget.style.background = "transparent";
@@ -558,18 +578,18 @@ export default function CodeExplorer() {
                               <span className="flex-shrink-0">{getFileIcon(file.name)}</span>
                               <span
                                 className="flex-1 text-xs font-medium truncate"
-                                style={{ color: isActive ? "#00f5ff" : "#a0aec0" }}
+                                style={{ color: isActive ? "var(--accent-primary)" : "var(--subtle-text)" }}
                               >
                                 {file.name}
                               </span>
                               <button
                                 onClick={(e) => handleCloseFile(file.id, e)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-[#1a1f2e]"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-[var(--panel-border)]"
                                 title="Close"
                               >
                                 <svg
                                   className="w-3 h-3"
-                                  style={{ color: isActive ? "#00f5ff" : "#6c7a8a" }}
+                                  style={{ color: isActive ? "var(--accent-primary)" : "var(--muted-text)" }}
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -590,27 +610,27 @@ export default function CodeExplorer() {
 
                     {/* File Header */}
                     <div
-                      className="border-b border-[#1a1f2e] px-4 py-2 flex-shrink-0"
-                      style={{ background: "rgba(0,245,255,.03)" }}
+                      className="border-b border-[var(--panel-border)] px-4 py-2 flex-shrink-0"
+                      style={{ background: "var(--accent-muted-bg)" }}
                     >
                       <div className="flex items-center gap-2.5">
                         <span className="flex-shrink-0">{getFileIcon(selectedFile.name)}</span>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h2
-                              className="text-white font-semibold text-xs"
+                              className="text-[var(--primary-text)] font-semibold text-xs"
                               style={{ fontFamily: "'Orbitron',monospace" }}
                             >
                               {selectedFile.name}
                             </h2>
                             <span
                               className="text-[9px] px-1.5 py-0.5 rounded font-medium"
-                              style={{ background: "rgba(0,245,255,.1)", color: "#00f5ff" }}
+                              style={{ background: "var(--accent-soft)", color: "var(--accent-primary)" }}
                             >
                               {getLanguageLabel(selectedFile.name)}
                             </span>
                           </div>
-                          <p className="text-[#6c7a8a] text-[9px] font-medium mt-0.5">
+                          <p className="text-[var(--muted-text)] text-[9px] font-medium mt-0.5">
                             {getFilePath(selectedFile, tree)}
                           </p>
                         </div>
@@ -618,9 +638,9 @@ export default function CodeExplorer() {
                           <button
                             onClick={() => setShowCode(false)}
                             className="px-2 py-1 rounded text-[10px] font-medium transition-colors"
-                            style={{ background: "rgba(255,255,255,.05)", color: "#6c7a8a", border: "1px solid rgba(255,255,255,.1)" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,.1)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,.05)")}
+                            style={{ background: "var(--surface-soft)", color: "var(--muted-text)", border: "1px solid var(--surface-soft-border)" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-soft-border)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--surface-soft)")}
                             title="Hide Code"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -629,7 +649,7 @@ export default function CodeExplorer() {
                             <button
                               onClick={() => setShowPreview(true)}
                               className="px-2 py-1 rounded text-[10px] font-medium transition-colors flex items-center gap-1"
-                              style={{ background: "rgba(0,245,255,.08)", color: "#00f5ff", border: "1px solid rgba(0,245,255,.3)" }}
+                              style={{ background: "var(--accent-soft-2)", color: "var(--accent-primary)", border: "1px solid var(--accent-border)" }}
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                               Preview
@@ -640,16 +660,16 @@ export default function CodeExplorer() {
                             className="px-2.5 py-1 text-white rounded text-[10px] font-medium transition-colors flex items-center gap-1"
                             style={{
                               background:
-                                "linear-gradient(135deg,rgba(0,245,255,.18),rgba(124,58,237,.12))",
-                              border: "1px solid rgba(0,245,255,.3)",
+                                "linear-gradient(135deg,var(--accent-grad-a),rgba(124,58,237,.12))",
+                              border: "1px solid var(--accent-border)",
                             }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.background =
-                                "linear-gradient(135deg,rgba(0,245,255,.28),rgba(124,58,237,.2))")
+                                "linear-gradient(135deg,var(--accent-grad-b),rgba(124,58,237,.2))")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.background =
-                                "linear-gradient(135deg,rgba(0,245,255,.18),rgba(124,58,237,.12))")
+                                "linear-gradient(135deg,var(--accent-grad-a),rgba(124,58,237,.12))")
                             }
                           >
                             <svg
@@ -671,15 +691,15 @@ export default function CodeExplorer() {
                             onClick={(e) => handleCloseFile(selectedFile.id, e)}
                             className="px-2 py-1 rounded text-[10px] font-medium transition-colors"
                             style={{
-                              background: "rgba(255,255,255,.05)",
-                              color: "#a0aec0",
-                              border: "1px solid rgba(255,255,255,.1)",
+                              background: "var(--surface-soft)",
+                              color: "var(--subtle-text)",
+                              border: "1px solid var(--surface-soft-border)",
                             }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.background = "rgba(255,255,255,.1)")
+                              (e.currentTarget.style.background = "var(--surface-soft-border)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = "rgba(255,255,255,.05)")
+                              (e.currentTarget.style.background = "var(--surface-soft)")
                             }
                             title="Close File"
                           >
@@ -702,12 +722,12 @@ export default function CodeExplorer() {
                     </div>
 
                     {/* Code viewer */}
-                    <div className="flex-1 overflow-hidden" style={{ background: "#0a0e1a" }}>
+                    <div className="flex-1 overflow-hidden" style={{ background: "var(--panel-bg)" }}>
                       {loadingContent ? (
                         <div className="flex items-center justify-center h-full">
                           <div className="text-center">
-                            <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mb-2.5"></div>
-                            <p className="text-[#6c7a8a] font-medium text-[10px]">
+                            <div className="w-8 h-8 border-2 border-[var(--panel-border)] border-t-[var(--accent-primary)] rounded-full animate-spin mb-2.5"></div>
+                            <p className="text-[var(--muted-text)] font-medium text-[10px]">
                               Loading file...
                             </p>
                           </div>
@@ -719,27 +739,27 @@ export default function CodeExplorer() {
 
                     {/* Status Bar */}
                     <div
-                      className="flex items-center justify-between px-4 py-1 border-t border-[#1a1f2e] text-[10px] flex-shrink-0"
-                      style={{ background: "rgba(0,0,0,.3)" }}
+                      className="flex items-center justify-between px-4 py-1 border-t border-[var(--panel-border)] text-[10px] flex-shrink-0"
+                      style={{ background: "var(--overlay-bg-stronger)" }}
                     >
                       <div className="flex items-center gap-4">
-                        <span className="text-[#6c7a8a]">
-                          <span className="text-[#00f5ff] font-semibold">
+                        <span className="text-[var(--muted-text)]">
+                          <span className="text-[var(--accent-primary)] font-semibold">
                             {getLanguageLabel(selectedFile.name)}
                           </span>
                         </span>
-                        <span className="text-[#6c7a8a]">
+                        <span className="text-[var(--muted-text)]">
                           {fileContent.split("\n").length} lines
                         </span>
-                        <span className="text-[#6c7a8a]">{fileContent.length} characters</span>
-                        <span className="text-[#6c7a8a]">UTF-8</span>
+                        <span className="text-[var(--muted-text)]">{fileContent.length} characters</span>
+                        <span className="text-[var(--muted-text)]">UTF-8</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-[#6c7a8a]">
+                        <span className="text-[var(--muted-text)]">
                           {openFiles.length} file{openFiles.length !== 1 ? "s" : ""} open
                         </span>
                         <span
-                          className="text-[#00f5ff] font-semibold"
+                          className="text-[var(--accent-primary)] font-semibold"
                           style={{ fontFamily: "'Orbitron',monospace" }}
                         >
                           OXYBFS.AI
@@ -751,18 +771,18 @@ export default function CodeExplorer() {
                   /* No file selected placeholder */
                   <div
                     className="flex-1 flex items-center justify-center"
-                    style={{ background: "#020414" }}
+                    style={{ background: "var(--app-bg)" }}
                   >
                     <div className="text-center">
                       <div
                         className="w-16 h-16 rounded flex items-center justify-center mx-auto mb-3"
                         style={{
-                          background: "rgba(0,245,255,.05)",
-                          border: "1px solid rgba(0,245,255,.2)",
+                          background: "var(--accent-faint)",
+                          border: "1px solid var(--accent-border-soft)",
                         }}
                       >
                         <svg
-                          className="w-8 h-8 text-[#00f5ff]"
+                          className="w-8 h-8 text-[var(--accent-primary)]"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -776,14 +796,14 @@ export default function CodeExplorer() {
                         </svg>
                       </div>
                       <h2
-                        className="text-sm font-semibold text-white mb-1"
+                        className="text-sm font-semibold text-[var(--primary-text)] mb-1"
                         style={{ fontFamily: "'Orbitron',monospace" }}
                       >
                         Select a File
                       </h2>
-                      <p className="text-[#6c7a8a] text-xs">
+                      <p className="text-[var(--muted-text)] text-xs">
                         Choose from{" "}
-                        <span className="font-semibold text-[#00f5ff]">{selectedTitle}</span> to
+                        <span className="font-semibold text-[var(--accent-primary)]">{selectedTitle}</span> to
                         view code
                       </p>
                     </div>
@@ -795,7 +815,7 @@ export default function CodeExplorer() {
             {/* Resizer - code/preview */}
             {showCode && showPreview && (
               <div
-                className="w-1 bg-transparent hover:bg-[#00f5ff] cursor-col-resize transition-colors relative flex-shrink-0"
+                className="w-1 bg-transparent hover:bg-[var(--accent-primary)] cursor-col-resize transition-colors relative flex-shrink-0"
                 onMouseDown={() => setIsResizing("code")}
               >
                 <div className="absolute inset-0 w-3 -left-1" />
@@ -817,15 +837,17 @@ export default function CodeExplorer() {
                   onTogglePreview={() => setShowPreview(false)}
                   showCode={showCode}
                   onToggleCode={() => setShowCode((v) => !v)}
+                  theme={theme}
+                  onToggleTheme={onToggleTheme}
                 />
               ) : (
                 <div
                   className="flex-1 flex items-center justify-center"
-                  style={{ background: "#020414" }}
+                  style={{ background: "var(--app-bg)" }}
                 >
                   <div className="text-center">
-                    <div className="w-10 h-10 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-[#6c7a8a] text-xs">Loading Preview...</p>
+                    <div className="w-10 h-10 border-2 border-[var(--panel-border)] border-t-[var(--accent-primary)] rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-[var(--muted-text)] text-xs">Loading Preview...</p>
                   </div>
                 </div>
               )}
@@ -835,15 +857,15 @@ export default function CodeExplorer() {
             {!showCode && !showPreview && (
               <div
                 className="flex-1 flex items-center justify-center"
-                style={{ background: "#020414" }}
+                style={{ background: "var(--app-bg)" }}
               >
                 <div className="text-center">
-                  <p className="text-[#6c7a8a] text-xs mb-3">All panels are hidden.</p>
+                  <p className="text-[var(--muted-text)] text-xs mb-3">All panels are hidden.</p>
                   <div className="flex gap-2 justify-center">
                     <button
                       onClick={() => setShowCode(true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium"
-                      style={{ background: "rgba(0,245,255,.1)", border: "1px solid rgba(0,245,255,.3)", color: "#00f5ff" }}
+                      style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-border)", color: "var(--accent-primary)" }}
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                       Show Code
@@ -851,7 +873,7 @@ export default function CodeExplorer() {
                     <button
                       onClick={() => setShowPreview(true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium"
-                      style={{ background: "rgba(0,245,255,.1)", border: "1px solid rgba(0,245,255,.3)", color: "#00f5ff" }}
+                      style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-border)", color: "var(--accent-primary)" }}
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                       Show Preview
@@ -862,19 +884,24 @@ export default function CodeExplorer() {
             )}
           </>
         ) : view === "titles" ? (
-          <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "#020414" }}>
+          <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--app-bg)" }}>
             {/* Header */}
             <div
-              className="border-b border-[#1a1f2e] px-6 py-4"
-              style={{ background: "rgba(0,245,255,.03)" }}
+              className="border-b border-[var(--panel-border)] px-6 py-4"
+              style={{ background: "var(--accent-muted-bg)" }}
             >
-              <h2
-                className="text-2xl font-bold text-white mb-1"
-                style={{ fontFamily: "'Orbitron',monospace" }}
-              >
-                Projects
-              </h2>
-              <p className="text-[#6c7a8a] text-sm">Select a project to explore and run</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2
+                    className="text-2xl font-bold text-[var(--primary-text)] mb-1"
+                    style={{ fontFamily: "'Orbitron',monospace" }}
+                  >
+                    Projects
+                  </h2>
+                  <p className="text-[var(--muted-text)] text-sm">Select a project to explore and run</p>
+                </div>
+                <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />
+              </div>
             </div>
 
             {/* Projects Grid */}
@@ -882,16 +909,16 @@ export default function CodeExplorer() {
               {loadingTitles ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="w-12 h-12 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mb-3"></div>
-                    <p className="text-[#6c7a8a] font-medium text-sm">Loading projects...</p>
+                    <div className="w-12 h-12 border-2 border-[var(--panel-border)] border-t-[var(--accent-primary)] rounded-full animate-spin mb-3"></div>
+                    <p className="text-[var(--muted-text)] font-medium text-sm">Loading projects...</p>
                   </div>
                 </div>
               ) : filteredTitles.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-[#1a1f2e] rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-[var(--panel-border)] rounded-lg flex items-center justify-center mx-auto mb-4">
                       <svg
-                        className="w-8 h-8 text-[#6c7a8a]"
+                        className="w-8 h-8 text-[var(--muted-text)]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -904,7 +931,7 @@ export default function CodeExplorer() {
                         />
                       </svg>
                     </div>
-                    <p className="text-[#6c7a8a] text-sm">No projects found</p>
+                    <p className="text-[var(--muted-text)] text-sm">No projects found</p>
                   </div>
                 </div>
               ) : (
@@ -914,22 +941,22 @@ export default function CodeExplorer() {
                       key={idx}
                       className="group rounded-lg p-7 hover:shadow-lg transition-all duration-200"
                       style={{
-                        background: "rgba(255,255,255,.03)",
-                        border: "1px solid rgba(255,255,255,.06)",
+                        background: "var(--surface-soft)",
+                        border: "1px solid var(--surface-soft-border-2)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(0,245,255,.3)";
-                        e.currentTarget.style.boxShadow = "0 0 24px rgba(0,245,255,.1)";
+                        e.currentTarget.style.borderColor = "var(--accent-border)";
+                        e.currentTarget.style.boxShadow = "0 0 24px var(--accent-soft)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(255,255,255,.06)";
+                        e.currentTarget.style.borderColor = "var(--surface-soft-border-2)";
                         e.currentTarget.style.boxShadow = "none";
                       }}
                     >
                       <div className="flex items-start gap-3 mb-3">
                         <div
                           className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
-                          style={{ background: "linear-gradient(135deg,#00f5ff,#7c3aed)" }}
+                          style={{ background: "linear-gradient(135deg,var(--accent-primary),#7c3aed)" }}
                         >
                           <span className="text-white font-bold text-2xl">
                             {title.charAt(0).toUpperCase()}
@@ -937,15 +964,15 @@ export default function CodeExplorer() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3
-                            className="text-white font-semibold text-base mb-1 truncate group-hover:text-[#00f5ff] transition-colors"
+                            className="text-[var(--primary-text)] font-semibold text-base mb-1 truncate transition-colors"
                             style={{
                               fontFamily: "'Orbitron',monospace",
-                              color: highlightedTitle === title ? "#00f5ff" : undefined,
+                              color: highlightedTitle === title && showHistoryView ? "var(--accent-primary)" : undefined,
                             }}
                           >
                             {title}
                           </h3>
-                          <p className="text-[#6c7a8a] text-xs">Project Folder</p>
+                          <p className="text-[var(--muted-text)] text-xs">Project Folder</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -954,8 +981,8 @@ export default function CodeExplorer() {
                           onClick={() => handleTitleClick(title)}
                           className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded border group/epbtn"
                           style={{
-                            borderColor: "rgba(255,255,255,.07)",
-                            background: "rgba(255,255,255,.02)",
+                            borderColor: "var(--surface-soft-border-2)",
+                            background: "var(--surface-faint)",
                             transition: "all 0.22s ease",
                             cursor: "pointer",
                             position: "relative",
@@ -963,30 +990,26 @@ export default function CodeExplorer() {
                           }}
                           onMouseEnter={(e) => {
                             const btn = e.currentTarget;
-                            btn.style.background = "rgba(255,255,255,.07)";
-                            btn.style.borderColor = "rgba(255,255,255,.2)";
+                            btn.style.background = "var(--surface-soft-border-2)";
+                            btn.style.borderColor = "var(--surface-soft-border)";
                             btn.style.transform = "translateY(-1px)";
-                            btn.style.boxShadow = "0 4px 16px rgba(0,0,0,.3)";
+                            btn.style.boxShadow = "0 4px 16px var(--overlay-bg-stronger)";
                             const span = btn.querySelector(".ep-label") as HTMLElement;
-                            if (span) span.style.color = "#e2e8f0";
-                            const arrow = btn.querySelector(".ep-arrow") as HTMLElement;
-                            if (arrow) { arrow.style.transform = "translateX(3px)"; arrow.style.color = "#00f5ff"; }
+                            if (span) span.style.color = "var(--primary-text)";
                           }}
                           onMouseLeave={(e) => {
                             const btn = e.currentTarget;
-                            btn.style.background = "rgba(255,255,255,.02)";
-                            btn.style.borderColor = "rgba(255,255,255,.07)";
+                            btn.style.background = "var(--surface-faint)";
+                            btn.style.borderColor = "var(--surface-soft-border-2)";
                             btn.style.transform = "translateY(0)";
                             btn.style.boxShadow = "none";
                             const span = btn.querySelector(".ep-label") as HTMLElement;
-                            if (span) span.style.color = "#6c7a8a";
-                            const arrow = btn.querySelector(".ep-arrow") as HTMLElement;
-                            if (arrow) { arrow.style.transform = "translateX(0)"; arrow.style.color = "#6c7a8a"; }
+                            if (span) span.style.color = "var(--muted-text)";
                           }}
                         >
                           <span
                             className="ep-label text-xs font-medium"
-                            style={{ color: "#6c7a8a", transition: "color 0.22s ease" }}
+                            style={{ color: "var(--muted-text)", transition: "color 0.22s ease" }}
                           >
                             Explore Project
                           </span>
@@ -995,7 +1018,7 @@ export default function CodeExplorer() {
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
-                            style={{ color: "#6c7a8a", transition: "transform 0.22s ease, color 0.22s ease", flexShrink: 0 }}
+                            style={{ color: "var(--muted-text)", transition: "color 0.22s ease", flexShrink: 0 }}
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
@@ -1004,47 +1027,60 @@ export default function CodeExplorer() {
                         {/* Explore Steps button */}
                         <button
                           onClick={() => handleExplore12Steps(title)}
+                          disabled={loadingProject === title}
                           className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded border text-xs"
                           style={{
-                            borderColor: "rgba(0,245,255,.3)",
-                            background: "rgba(0,245,255,.07)",
-                            color: "#00f5ff",
-                            cursor: "pointer",
+                            borderColor: loadingProject === title ? "var(--accent-border)" : "var(--surface-soft-border-2)",
+                            background: loadingProject === title ? "var(--accent-soft)" : "var(--surface-faint)",
+                            color: loadingProject === title ? "var(--accent-primary)" : "var(--muted-text)",
+                            cursor: loadingProject === title ? "not-allowed" : "pointer",
                             transition: "all 0.22s ease",
                             position: "relative",
                             overflow: "hidden",
+                            opacity: loadingProject === title ? 0.7 : 1,
                           }}
                           onMouseEnter={(e) => {
+                            if (loadingProject === title) return;
                             const btn = e.currentTarget;
-                            btn.style.background = "rgba(0,245,255,.18)";
-                            btn.style.borderColor = "rgba(0,245,255,.6)";
-                            btn.style.boxShadow = "0 0 20px rgba(0,245,255,.25), 0 4px 16px rgba(0,245,255,.1)";
+                            btn.style.background = "var(--surface-soft-border-2)";
+                            btn.style.borderColor = "var(--surface-soft-border)";
+                            btn.style.boxShadow = "0 4px 16px var(--overlay-bg-stronger)";
                             btn.style.transform = "translateY(-1px)";
-                            btn.style.color = "#fff";
+                            btn.style.color = "var(--primary-text)";
                             const icon = btn.querySelector(".es-icon") as HTMLElement;
-                            if (icon) { icon.style.transform = "scale(1.2) rotate(-10deg)"; icon.style.filter = "drop-shadow(0 0 4px #00f5ff)"; }
+                            if (icon) { icon.style.transform = "translateX(2px)"; icon.style.filter = "none"; }
                           }}
                           onMouseLeave={(e) => {
+                            if (loadingProject === title) return;
                             const btn = e.currentTarget;
-                            btn.style.background = "rgba(0,245,255,.07)";
-                            btn.style.borderColor = "rgba(0,245,255,.3)";
+                            btn.style.background = "var(--surface-faint)";
+                            btn.style.borderColor = "var(--surface-soft-border-2)";
                             btn.style.boxShadow = "none";
                             btn.style.transform = "translateY(0)";
-                            btn.style.color = "#00f5ff";
+                            btn.style.color = "var(--muted-text)";
                             const icon = btn.querySelector(".es-icon") as HTMLElement;
-                            if (icon) { icon.style.transform = "scale(1) rotate(0deg)"; icon.style.filter = "none"; }
+                            if (icon) { icon.style.transform = "translateX(0)"; icon.style.filter = "none"; }
                           }}
                         >
-                          <svg
-                            className="es-icon w-3.5 h-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            style={{ transition: "transform 0.22s ease, filter 0.22s ease", flexShrink: 0 }}
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          <span className="font-semibold" style={{ transition: "color 0.22s ease" }}>Explore Steps</span>
+                          {loadingProject === title ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" style={{ flexShrink: 0 }} />
+                              <span className="font-semibold">Loading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                className="es-icon w-3.5 h-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ transition: "transform 0.22s ease", flexShrink: 0 }}
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              <span className="font-semibold" style={{ transition: "color 0.22s ease" }}>Explore Steps</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1056,10 +1092,10 @@ export default function CodeExplorer() {
             {/* Footer Stats */}
             {!loadingTitles && titles.length > 0 && (
               <div
-                className="border-t border-[#1a1f2e] px-6 py-3"
-                style={{ background: "rgba(0,0,0,.2)" }}
+                className="border-t border-[var(--panel-border)] px-6 py-3"
+                style={{ background: "var(--overlay-bg-strong)" }}
               >
-                <p className="text-xs text-[#6c7a8a] text-center">
+                <p className="text-xs text-[var(--muted-text)] text-center">
                   Showing {filteredTitles.length} of {titles.length} project
                   {titles.length !== 1 ? "s" : ""}
                 </p>
@@ -1071,10 +1107,10 @@ export default function CodeExplorer() {
 
       {/* ── History / Pipeline Overlay ── */}
       {showHistoryView && (
-        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#020414", fontFamily: "'Sora',sans-serif" }}>
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--history-overlay-bg)", fontFamily: "'Sora',sans-serif" }}>
           {/* Header */}
-          <div className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1f2e]" style={{ background: "rgba(0,245,255,.03)", flexShrink: 0 }}>
-            <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,#00f5ff,#7c3aed)" }}>
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--panel-border)]" style={{ background: "var(--history-header-bg)", flexShrink: 0 }}>
+            <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,var(--accent-primary),#7c3aed)" }}>
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -1086,30 +1122,35 @@ export default function CodeExplorer() {
                   fontWeight: 800,
                   fontSize: "0.85rem",
                   display: "inline-block",
-                  color: highlightHistoryHeading ? "#c8f3ff" : "#9ed8e8",
+                  color: highlightHistoryHeading ? "var(--history-title-active)" : "var(--history-title)",
                   letterSpacing: highlightHistoryHeading ? "0.045em" : "0.02em",
                   transition: "all 0.22s ease",
                 }}
               >
                 Explore Steps
               </h2>
-              <p className="text-[#6c7a8a] text-[10px] mt-0.5">{historyProject}</p>
+              <p className="text-[var(--muted-text)] text-[10px] mt-0.5">{historyProject}</p>
             </div>
             {/* Code view toggle */}
             {historyResult && (
               <button
                 onClick={() => { setHistoryCodeViewResult(historyResult); setShowHistoryCodeView(true); }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold"
-                style={{ background: "linear-gradient(135deg,rgba(0,245,255,.18),rgba(124,58,237,.12))", border: "1px solid rgba(0,245,255,.3)", color: "#00f5ff" }}
+                style={{ background: "var(--history-view-code-bg)", border: "1px solid var(--history-view-code-border)", color: "var(--history-view-code-text)" }}
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                 View Code
               </button>
             )}
             <button
-              onClick={() => { setShowHistoryView(false); setShowHistoryCodeView(false); }}
+              onClick={() => {
+                setShowHistoryView(false);
+                setShowHistoryCodeView(false);
+                setHighlightedTitle(null);
+                setHighlightHistoryHeading(false);
+              }}
               className="px-3 py-1.5 rounded text-xs font-medium"
-              style={{ background: "rgba(255,255,255,.05)", color: "#a0aec0", border: "1px solid rgba(255,255,255,.1)" }}
+              style={{ background: "var(--surface-soft)", color: "var(--subtle-text)", border: "1px solid var(--surface-soft-border)" }}
             >
               ✕ Close
             </button>
@@ -1118,12 +1159,12 @@ export default function CodeExplorer() {
           {/* Body */}
           <div className="flex-1 overflow-hidden flex">
             {/* Pipeline feed column */}
-            <div className={`flex flex-col overflow-hidden ${showHistoryCodeView ? "w-[42%] border-r border-[#1a1f2e]" : "flex-1"}`}>
+            <div className={`flex flex-col overflow-hidden ${showHistoryCodeView ? "w-[42%] border-r border-[var(--panel-border)]" : "flex-1"}`}>
               {historyLoading ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="w-10 h-10 border-2 border-[#1a1f2e] border-t-[#00f5ff] rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-[#6c7a8a] text-xs">Fetching pipeline history…</p>
+                    <div className="w-10 h-10 border-2 border-[var(--panel-border)] border-t-[var(--accent-primary)] rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-[var(--muted-text)] text-xs">Fetching pipeline history…</p>
                   </div>
                 </div>
               ) : historyError && historySteps.length === 0 ? (
@@ -1133,15 +1174,15 @@ export default function CodeExplorer() {
                       <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </div>
                     <p className="text-red-400 text-sm font-medium mb-1">Failed to load history</p>
-                    <p className="text-[#6c7a8a] text-xs">{historyError}</p>
+                    <p className="text-[var(--muted-text)] text-xs">{historyError}</p>
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto p-6" style={{ scrollbarWidth: "thin", background: "#020414" }}>
+                <div className="flex-1 overflow-y-auto p-6" style={{ scrollbarWidth: "thin", background: "var(--history-overlay-bg)" }}>
                   <div className="max-w-2xl mx-auto space-y-4">
                     {/* Prompt card */}
-                    <div className="px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)", color: "#c4c8f8" }}>
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-indigo-400 block mb-1">User Prompt</span>
+                    <div className="px-4 py-3 rounded-xl text-sm" style={{ background: "var(--history-prompt-bg)", border: "1px solid var(--history-prompt-border)", color: "var(--history-prompt-text)" }}>
+                      <span className="text-[10px] font-semibold uppercase tracking-widest block mb-1" style={{ color: "var(--history-prompt-label)" }}>User Prompt</span>
                       {historyProject}
                     </div>
                     {/* Steps */}
@@ -1153,33 +1194,36 @@ export default function CodeExplorer() {
                         "Folder Structure": "#14B8A6", "Prompt Builder": "#EC4899",
                         "Backend Generation": "#10B981", "Frontend Generation": "#A78BFA", "Database Generation": "#38BDF8",
                       };
-                      const ICONS: Record<string, string> = {
-                        "Planning": "🔍", "Clarification": "❓", "Tech Stack": "🛠️",
-                        "Use Cases": "📋", "Compliance": "📜", "System Design": "🏗️",
-                        "Folder Structure": "📁", "Prompt Builder": "✍️",
-                        "Backend Generation": "⚙️", "Frontend Generation": "🎨", "Database Generation": "🗄️",
+                      const STEP_SHORT: Record<string, string> = {
+                        "Planning": "PL", "Clarification": "CL", "Tech Stack": "TS",
+                        "Use Cases": "UC", "Compliance": "CO", "System Design": "SD",
+                        "Folder Structure": "FS", "Prompt Builder": "PB",
+                        "Backend Generation": "BE", "Frontend Generation": "FE", "Database Generation": "DB",
                       };
                       const accent = COLORS[step.label] ?? "#6B7A99";
                       const isDone = step.status === "completed";
                       const isErr  = step.status === "error";
                       return (
-                        <div key={step.step} className="flex gap-3">
+                        <div key={step.step} className="flex gap-3.5">
                           {/* timeline */}
-                          <div className="flex flex-col items-center w-7 shrink-0">
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                              style={{ background: isDone ? `${accent}14` : isErr ? "rgba(239,68,68,.1)" : "rgba(255,255,255,.04)", border: isDone ? `1px solid ${accent}32` : isErr ? "1px solid rgba(239,68,68,.3)" : "1px solid rgba(255,255,255,.08)" }}>
+                          <div className="flex flex-col items-center w-8 shrink-0">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                              style={{ background: isDone ? `${accent}14` : isErr ? "rgba(239,68,68,.1)" : "var(--surface-faint)", border: isDone ? `1px solid ${accent}32` : isErr ? "1px solid rgba(239,68,68,.3)" : "1px solid var(--surface-soft-border-2)" }}>
                               {isDone ? (
                                 <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               ) : isErr ? (
                                 <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round"/></svg>
                               ) : (
-                                <span style={{ fontSize: 11 }}>{ICONS[step.label] ?? "▸"}</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, color: "var(--muted-text)", letterSpacing: "0.03em" }}>
+                                  {STEP_SHORT[step.label] ?? "ST"}
+                                </span>
                               )}
                             </div>
-                            {!isLast && <div className="w-px flex-1 mt-1.5" style={{ background: isDone ? `linear-gradient(to bottom,${accent}2A,rgba(255,255,255,.04))` : "rgba(255,255,255,.04)", minHeight: 14 }} />}
+                            {!isLast && <div className="w-px flex-1 mt-1.5" style={{ background: isDone ? `linear-gradient(to bottom,${accent}2A,var(--surface-faint))` : "var(--surface-faint)", minHeight: 14 }} />}
                           </div>
                           {/* card */}
-                          <ExpandableStepCard step={step} accent={accent} isDone={isDone} isErr={isErr} icon={ICONS[step.label] ?? "▸"} />
+                          <ExpandableStepCard step={step} accent={accent} isDone={isDone} isErr={isErr} icon={STEP_SHORT[step.label] ?? "ST"} />
                         </div>
                       );
                     })}
@@ -1192,16 +1236,16 @@ export default function CodeExplorer() {
             {showHistoryCodeView && historyCodeViewResult && (
               <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Tab bar */}
-                <div className="flex items-center gap-1 px-3 py-2 border-b border-[#1a1f2e]" style={{ background: "rgba(0,0,0,.2)", flexShrink: 0 }}>
+                <div className="flex items-center gap-1 px-3 py-2 border-b border-[var(--panel-border)]" style={{ background: "var(--history-tabbar-bg)", flexShrink: 0 }}>
                   {(["backend", "frontend", "database"] as const).map(tab => (
                     <button key={tab}
                       onClick={() => setHistoryCodeTab(tab)}
                       className="px-3 py-1.5 rounded text-xs font-medium capitalize transition-all"
-                      style={{ background: historyCodeTab === tab ? "rgba(0,245,255,.1)" : "transparent", color: historyCodeTab === tab ? "#00f5ff" : "#6c7a8a", border: historyCodeTab === tab ? "1px solid rgba(0,245,255,.3)" : "1px solid transparent" }}>
+                      style={{ background: historyCodeTab === tab ? "var(--history-tab-active-bg)" : "transparent", color: historyCodeTab === tab ? "var(--history-tab-active-text)" : "var(--muted-text)", border: historyCodeTab === tab ? "1px solid var(--history-tab-active-border)" : "1px solid transparent" }}>
                       {tab} ({historyCodeViewResult[tab].length})
                     </button>
                   ))}
-                  <button onClick={() => setShowHistoryCodeView(false)} className="ml-auto px-2 py-1 rounded text-[10px]" style={{ color: "#6c7a8a" }}>✕</button>
+                  <button onClick={() => setShowHistoryCodeView(false)} className="ml-auto px-2 py-1 rounded text-[10px]" style={{ color: "var(--muted-text)" }}>✕</button>
                 </div>
                 <CodeView
                   result={historyCodeViewResult}
@@ -1232,98 +1276,114 @@ interface FileTreeViewProps {
 
 // Helper: recursively render any value into readable JSX
 function renderValue(val: unknown, accent: string, depth = 0): React.ReactNode {
-  if (val === null || val === undefined) return <span style={{ color: "#6c7a8a" }}>—</span>;
-  if (typeof val === "boolean") return <span style={{ color: val ? "#10B981" : "#ef4444" }}>{String(val)}</span>;
-  if (typeof val === "number")  return <span style={{ color: "#F59E0B" }}>{val}</span>;
+  if (val === null || val === undefined) return <span style={{ color: "var(--muted-text)" }}>-</span>;
+  if (typeof val === "boolean") return <span style={{ color: val ? "#10B981" : "#ef4444", fontWeight: 600 }}>{String(val)}</span>;
+  if (typeof val === "number") return <span style={{ color: "#F59E0B", fontWeight: 600 }}>{val}</span>;
 
   if (typeof val === "string") {
-    if (val.length > 300) {
+    if (val.length > 220) {
       return (
-        <pre className="whitespace-pre-wrap break-all font-mono text-[11px] max-h-48 overflow-y-auto leading-relaxed"
-          style={{ color: "#a0aec0", scrollbarWidth: "thin" }}>
+        <pre
+          className="whitespace-pre-wrap break-all font-mono text-[11px] max-h-48 overflow-y-auto leading-relaxed px-3 py-2.5 rounded-lg"
+          style={{
+            color: "var(--primary-text)",
+            background: "var(--history-step-content-bg)",
+            border: "1px solid var(--history-step-content-border)",
+            scrollbarWidth: "thin",
+          }}
+        >
           {val}
         </pre>
       );
     }
-    return <span style={{ color: "#e2e8f0", fontSize: 11 }}>{val}</span>;
+    return <span style={{ color: "var(--primary-text)", fontSize: 12, lineHeight: 1.6 }}>{val}</span>;
   }
 
   if (Array.isArray(val)) {
-    if (val.length === 0) return <span style={{ color: "#6c7a8a", fontSize: 11 }}>[ empty ]</span>;
+    if (val.length === 0) return <span style={{ color: "var(--muted-text)", fontSize: 11 }}>[empty]</span>;
     return (
-      <div className="space-y-1.5 mt-1">
-        {val.slice(0, 30).map((item, i) => (
-          <div key={i} className="pl-3 py-1.5 rounded-lg" style={{ borderLeft: `2px solid ${accent}50`, background: "rgba(255,255,255,.02)" }}>
+      <div className="space-y-2 mt-1">
+        {val.slice(0, 24).map((item, i) => (
+          <div
+            key={i}
+            className="px-3 py-2 rounded-lg"
+            style={{ borderLeft: `2px solid ${accent}55`, background: "var(--history-step-content-bg)", border: `1px solid ${accent}22` }}
+          >
+            <div className="text-[10px] font-semibold mb-1" style={{ color: "var(--history-step-subtitle)" }}>
+              Item {i + 1}
+            </div>
             {renderValue(item, accent, depth + 1)}
           </div>
         ))}
-        {val.length > 30 && (
-          <span className="text-[10px] pl-2" style={{ color: `${accent}88` }}>+{val.length - 30} more items…</span>
+        {val.length > 24 && (
+          <span className="text-[10px] pl-1" style={{ color: `${accent}AA` }}>
+            +{val.length - 24} more items
+          </span>
         )}
       </div>
     );
   }
 
   if (typeof val === "object" && val !== null) {
-    // At deep nesting (depth >= 3) fall back to JSON to avoid infinite height
     if (depth >= 3) {
       return (
-        <pre className="whitespace-pre-wrap break-all font-mono text-[10px] max-h-32 overflow-y-auto"
-          style={{ color: "#a0aec0", scrollbarWidth: "thin" }}>
+        <pre
+          className="whitespace-pre-wrap break-all font-mono text-[10px] max-h-32 overflow-y-auto px-3 py-2 rounded-lg"
+          style={{ color: "var(--subtle-text)", background: "var(--history-step-content-bg)", border: "1px solid var(--history-step-content-border)", scrollbarWidth: "thin" }}
+        >
           {JSON.stringify(val, null, 2)}
         </pre>
       );
     }
+
     const entries = Object.entries(val as Record<string, unknown>);
     return (
       <div className="space-y-2">
         {entries.map(([k, v]) => (
           <div key={k}>
             <span
-              className="text-[10px] font-bold uppercase tracking-widest block mb-1"
+              className="text-[10px] font-bold uppercase tracking-wide block mb-1"
               style={{
-                color: "#cce6ef",
-                background: `linear-gradient(90deg, ${accent}1f, rgba(255,255,255,0.015))`,
-                border: `1px solid ${accent}44`,
+                color: "var(--history-step-title)",
+                background: `linear-gradient(90deg, ${accent}1A, var(--surface-faint))`,
+                border: `1px solid ${accent}40`,
                 borderRadius: 8,
-                padding: "2px 8px",
+                padding: "3px 8px",
                 display: "inline-block",
-                letterSpacing: "0.09em",
+                letterSpacing: "0.08em",
               }}
             >
               {k}
             </span>
-            <div style={{ paddingLeft: 8 }}>
-              {renderValue(v, accent, depth + 1)}
-            </div>
+            <div className="pl-1.5">{renderValue(v, accent, depth + 1)}</div>
           </div>
         ))}
       </div>
     );
   }
 
-  return <span style={{ color: "#e2e8f0", fontSize: 11 }}>{String(val)}</span>;
+  return <span style={{ color: "var(--primary-text)", fontSize: 12 }}>{String(val)}</span>;
 }
 
 function StepDataRenderer({ data, accent }: { data: unknown; accent: string }) {
   if (data === null || data === undefined) return null;
 
-  /* Top-level string */
   if (typeof data === "string") {
     return (
-      <pre className="text-[11px] font-mono whitespace-pre-wrap break-all leading-relaxed max-h-64 overflow-y-auto px-4 py-3 rounded-xl"
-        style={{ background: "rgba(0,0,0,.3)", color: "#a0aec0", border: `1px solid ${accent}18`, scrollbarWidth: "thin" }}>
+      <pre
+        className="text-[12px] font-mono whitespace-pre-wrap break-all leading-relaxed max-h-72 overflow-y-auto px-4 py-3 rounded-xl"
+        style={{ background: "var(--history-step-content-bg)", color: "var(--primary-text)", border: "1px solid var(--history-step-content-border)", scrollbarWidth: "thin" }}
+      >
         {data}
       </pre>
     );
   }
 
-  /* Top-level array */
   if (Array.isArray(data)) {
     return (
-      <div className="space-y-2 max-h-72 overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
+      <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
         {data.map((item, i) => (
-          <div key={i} className="px-3 py-2 rounded-lg" style={{ background: "rgba(0,0,0,.25)", border: `1px solid ${accent}14` }}>
+          <div key={i} className="px-3 py-2.5 rounded-lg" style={{ background: "var(--history-step-content-bg)", border: `1px solid ${accent}22` }}>
             {renderValue(item, accent, 1)}
           </div>
         ))}
@@ -1331,37 +1391,33 @@ function StepDataRenderer({ data, accent }: { data: unknown; accent: string }) {
     );
   }
 
-  /* Top-level object — show key/value sections */
   if (typeof data === "object" && data !== null) {
     const entries = Object.entries(data as Record<string, unknown>);
     return (
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
+      <div className="space-y-4 max-h-[520px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
         {entries.map(([key, val]) => (
-          <div key={key}>
+          <div key={key} className="px-3 py-2.5 rounded-lg" style={{ background: "var(--history-step-content-bg)", border: "1px solid var(--history-step-content-border)" }}>
             <span
               className="text-[10px] font-bold uppercase tracking-widest block mb-1.5"
               style={{
-                color: "#d8edf6",
-                background: `linear-gradient(90deg, ${accent}24, rgba(255,255,255,0.02))`,
+                color: "var(--history-step-title)",
+                background: `linear-gradient(90deg, ${accent}24, var(--surface-faint))`,
                 border: `1px solid ${accent}48`,
                 borderRadius: 8,
                 padding: "3px 9px",
                 display: "inline-block",
-                letterSpacing: "0.1em",
               }}
             >
               {key}
             </span>
-            <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(0,0,0,.25)", border: `1px solid ${accent}14` }}>
-              {renderValue(val, accent, 1)}
-            </div>
+            {renderValue(val, accent, 1)}
           </div>
         ))}
       </div>
     );
   }
 
-  return <span className="text-[11px]" style={{ color: "#a0aec0" }}>{String(data)}</span>;
+  return <span className="text-[12px]" style={{ color: "var(--subtle-text)" }}>{String(data)}</span>;
 }
 
 function ExpandableStepCard({
@@ -1374,50 +1430,56 @@ function ExpandableStepCard({
   icon: string;
 }) {
   const hasContent = isDone && step.data !== null && step.data !== undefined;
+  const statusLabel = isDone ? "Completed" : isErr ? "Stopped" : "Pending";
+  const statusColor = isDone ? accent : isErr ? "#ef4444" : "var(--history-step-subtitle)";
+  const statusBg = isDone ? `${accent}1A` : isErr ? "rgba(239,68,68,.15)" : "var(--surface-soft)";
+  const stepSubtitle = isDone ? "Output available" : isErr ? "Interrupted at this stage" : "Waiting to run";
 
   return (
-    <div className="flex-1 rounded-2xl overflow-hidden mb-1.5"
-      style={{ background: isDone ? "rgba(255,255,255,.02)" : isErr ? "rgba(239,68,68,.04)" : "transparent", border: isDone ? `1px solid ${accent}18` : isErr ? "1px solid rgba(239,68,68,.2)" : "1px solid transparent" }}>
-      {/* Header row */}
-      <div className="flex items-center gap-2.5 px-4 py-3">
-        <span style={{ fontSize: 14 }}>{icon}</span>
-        <span
-          className="font-semibold"
-          style={{
-            fontSize: "0.88rem",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.07em",
-            padding: "3px 10px",
-            borderRadius: 8,
-            border: isDone
-              ? `1px solid ${accent}4a`
-              : isErr
-              ? "1px solid rgba(239,68,68,.42)"
-              : "1px solid rgba(255,255,255,.16)",
-            color: isDone ? "#d8e7ee" : isErr ? "#f7caca" : "rgba(255,255,255,.72)",
-            background: isDone
-              ? `linear-gradient(90deg, ${accent}24, rgba(255,255,255,0.03))`
-              : isErr
-              ? "linear-gradient(90deg, rgba(239,68,68,.16), rgba(255,255,255,0.03))"
-              : "linear-gradient(90deg, rgba(255,255,255,.1), rgba(255,255,255,0.02))",
-          }}
+    <div
+      className="flex-1 rounded-2xl overflow-hidden mb-2"
+      style={{
+        background: "var(--history-step-card-bg)",
+        border: isErr ? "1px solid rgba(239,68,68,.25)" : `1px solid ${isDone ? `${accent}45` : "var(--history-step-card-border)"}`,
+      }}
+    >
+      <div className="flex items-center gap-3 px-4 py-3.5" style={{ background: "var(--history-step-header-bg)" }}>
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
+          style={{ background: `${accent}22`, border: `1px solid ${accent}4A`, color: accent, letterSpacing: "0.04em" }}
+          title={`Step ${step.step}`}
         >
-          {step.label}
-        </span>
+          {icon}
+        </div>
+
+        <div className="min-w-0">
+          <div className="text-[13px] font-semibold leading-tight truncate" style={{ color: "var(--history-step-title)" }}>
+            Step {step.step}: {step.label}
+          </div>
+          <div className="text-[10px] mt-1" style={{ color: "var(--history-step-subtitle)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            {stepSubtitle}
+          </div>
+        </div>
+
         <div className="ml-auto">
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-            style={{ background: isDone ? `${accent}18` : isErr ? "rgba(239,68,68,.15)" : "rgba(255,255,255,.05)", color: isDone ? accent : isErr ? "#ef4444" : "rgba(255,255,255,.3)" }}>
-            {isDone ? "Done" : isErr ? "Stopped" : "Pending"}
+          <span
+            className="text-[10px] px-2.5 py-1 rounded-full font-semibold"
+            style={{ background: statusBg, color: statusColor, border: `1px solid ${isDone ? `${accent}44` : "var(--history-step-content-border)"}` }}
+          >
+            {statusLabel}
           </span>
         </div>
       </div>
-      {/* Always-visible content */}
+
       {hasContent && (
-        <div className="px-4 pb-4" style={{ borderTop: `1px solid ${accent}14` }}>
-          <div className="pt-3">
-            <StepDataRenderer data={step.data} accent={accent} />
-          </div>
+        <div className="px-4 pb-4 pt-3.5" style={{ borderTop: "1px solid var(--history-step-divider)" }}>
+          <StepDataRenderer data={step.data} accent={accent} />
+        </div>
+      )}
+
+      {!hasContent && (
+        <div className="px-4 py-3 text-[11px]" style={{ color: "var(--history-step-subtitle)", borderTop: "1px solid var(--history-step-divider)" }}>
+          {isErr ? "No step output available because this step failed." : "This step has not produced output yet."}
         </div>
       )}
     </div>
@@ -1483,17 +1545,17 @@ function TreeNode({
     <div>
       <div
         className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors ${
-          isSelected ? "bg-[#1a1f2e] text-white" : "hover:bg-[#1a1f2e] text-[#a0aec0]"
+          isSelected ? "bg-[var(--panel-border)] text-[var(--primary-text)]" : "hover:bg-[var(--panel-border)] text-[var(--subtle-text)]"
         }`}
         style={{ paddingLeft: `${level * 10 + 8}px` }}
         onClick={() => (isFolder ? setExpanded(!expanded) : onFileClick(node))}
       >
         {isFolder &&
           (isLoading ? (
-            <div className="w-2.5 h-2.5 border border-[#00f5ff] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-2.5 h-2.5 border border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg
-              className={`w-2.5 h-2.5 transition-transform text-[#6c7a8a] ${
+              className={`w-2.5 h-2.5 transition-transform text-[var(--muted-text)] ${
                 expanded ? "rotate-90" : ""
               }`}
               fill="none"
@@ -1515,9 +1577,9 @@ function TreeNode({
                 width="13"
                 height="13"
                 viewBox="0 0 24 24"
-                fill="#00f5ff"
+                fill="var(--accent-primary)"
                 fillOpacity=".7"
-                stroke="#00f5ff"
+                stroke="var(--accent-primary)"
                 strokeWidth="1.5"
               >
                 <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
@@ -1527,9 +1589,9 @@ function TreeNode({
                 width="13"
                 height="13"
                 viewBox="0 0 24 24"
-                fill="#6c7a8a"
+                fill="var(--muted-text)"
                 fillOpacity=".7"
-                stroke="#6c7a8a"
+                stroke="var(--muted-text)"
                 strokeWidth="1.5"
               >
                 <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
@@ -1543,12 +1605,12 @@ function TreeNode({
         {!isFolder && (
           <span
             className="text-[9px] px-1 py-0.5 rounded font-medium"
-            style={{ background: "rgba(0,245,255,.1)", color: "#00f5ff" }}
+            style={{ background: "var(--accent-soft)", color: "var(--accent-primary)" }}
           >
             {getFileExtension(node.name)}
           </span>
         )}
-        {isLoading && <span className="text-[9px] text-[#00f5ff]">Loading...</span>}
+        {isLoading && <span className="text-[9px] text-[var(--accent-primary)]">Loading...</span>}
       </div>
       {isFolder && expanded && node.children && node.children.length > 0 && (
         <FileTreeView
@@ -1567,26 +1629,26 @@ function CodeBlock({ code }: { code: string; fileName?: string }) {
   const lines = code.split("\n");
 
   return (
-    <div className="overflow-auto h-full w-full" style={{ background: "#0a0e1a" }}>
+    <div className="overflow-auto h-full w-full" style={{ background: "var(--panel-bg)" }}>
       <div className="flex" style={{ minWidth: "max-content" }}>
         <div
           className="text-right py-3 px-3 font-mono text-xs border-r select-none flex-shrink-0 sticky left-0"
           style={{
-            background: "rgba(0,0,0,.2)",
-            color: "#6c7a8a",
-            borderColor: "#1a1f2e",
+            background: "var(--overlay-bg-strong)",
+            color: "var(--muted-text)",
+            borderColor: "var(--panel-border)",
             minWidth: "50px",
           }}
         >
           {lines.map((_, i) => (
-            <div key={i} className="leading-5 px-1" style={{ color: "#6c7a8a" }}>
+            <div key={i} className="leading-5 px-1" style={{ color: "var(--muted-text)" }}>
               {i + 1}
             </div>
           ))}
         </div>
         <pre
           className="py-3 px-3 font-mono text-xs leading-5 flex-1"
-          style={{ color: "#e2e8f0", margin: 0 }}
+          style={{ color: "var(--primary-text)", margin: 0 }}
         >
           <code>{code}</code>
         </pre>
@@ -1606,16 +1668,16 @@ function getFileIcon(name: string): React.ReactElement {
     py: "#3572A5",
     html: "#e34c26",
     css: "#563d7c",
-    json: "#a0aec0",
-    md: "#6c7a8a",
-    xml: "#a0aec0",
-    yml: "#a0aec0",
-    yaml: "#a0aec0",
+    json: "var(--subtle-text)",
+    md: "var(--muted-text)",
+    xml: "var(--subtle-text)",
+    yml: "var(--subtle-text)",
+    yaml: "var(--subtle-text)",
     sql: "#336791",
     sh: "#89e051",
     bash: "#89e051",
   };
-  const c = color[ext || ""] || "#6c7a8a";
+  const c = color[ext || ""] || "var(--muted-text)";
   return (
     <svg
       width="13"

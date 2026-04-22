@@ -12,19 +12,19 @@ export function CodeView({ result, defaultTab, onBack }: CodeViewProps) {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div
         className="shrink-0 px-5 py-2.5 flex items-center gap-3"
-        style={{ background: "#FFFFFF", borderBottom: "1px solid #EAECF2" }}
+        style={{ background: "var(--panel-elevated)", borderBottom: "1px solid var(--panel-border)" }}
       >
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-          style={{ background: "#F0F2F8", color: "#6B7A99", border: "1px solid #D8DCE8" }}
+          style={{ background: "var(--surface-soft)", color: "var(--muted-text)", border: "1px solid var(--surface-soft-border)" }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "#E4E8F4";
-            (e.currentTarget as HTMLElement).style.color = "#1A2035";
+            (e.currentTarget as HTMLElement).style.background = "var(--surface-soft-border)";
+            (e.currentTarget as HTMLElement).style.color = "var(--app-text)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "#F0F2F8";
-            (e.currentTarget as HTMLElement).style.color = "#6B7A99";
+            (e.currentTarget as HTMLElement).style.background = "var(--surface-soft)";
+            (e.currentTarget as HTMLElement).style.color = "var(--muted-text)";
           }}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -32,10 +32,10 @@ export function CodeView({ result, defaultTab, onBack }: CodeViewProps) {
           </svg>
           Back to Pipeline
         </button>
-        <span className="text-sm font-bold" style={{ color: "#0A0E1A" }}>Generated Code</span>
+        <span className="text-sm font-bold" style={{ color: "var(--app-text)" }}>Generated Code</span>
         <span
           className="px-2 py-0.5 rounded-full text-xs font-semibold"
-          style={{ background: "#E8ECF4", color: "#6B7A99" }}
+          style={{ background: "var(--surface-soft)", color: "var(--muted-text)" }}
         >
           {result.backend.length + result.frontend.length + result.database.length} files
         </span>

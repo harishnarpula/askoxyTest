@@ -1,27 +1,30 @@
 .code-explorer {
   display: flex;
   height: 100vh;
-  background: #1e1e1e;
-  color: #cccccc;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background 0.3s, color 0.3s;
 }
 
 .explorer-sidebar {
   width: 300px;
-  background: #252526;
-  border-right: 1px solid #3e3e42;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
   overflow-y: auto;
+  transition: background 0.3s;
 }
 
 .explorer-header {
   padding: 12px 16px;
   font-size: 11px;
   font-weight: 600;
-  color: #cccccc;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.3s, color 0.3s;
 }
 
 .tree-node {
@@ -34,7 +37,7 @@
 }
 
 .tree-node:hover {
-  background: #2a2d2e;
+  background: var(--hover-bg);
 }
 
 .tree-node .icon {
@@ -58,17 +61,19 @@
 
 .file-tab {
   padding: 10px 16px;
-  background: #2d2d30;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
   font-size: 13px;
-  color: #ffffff;
+  color: var(--text-primary);
+  transition: background 0.3s, color 0.3s;
 }
 
 .file-content {
   flex: 1;
   overflow: auto;
   padding: 16px;
-  background: #1e1e1e;
+  background: var(--bg-primary);
+  transition: background 0.3s;
 }
 
 .file-content pre {
@@ -76,9 +81,13 @@
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
-  color: #d4d4d4;
+  color: var(--code-text);
+  background: var(--code-bg);
+  padding: 12px;
+  border-radius: 4px;
   white-space: pre-wrap;
   word-wrap: break-word;
+  transition: color 0.3s, background 0.3s;
 }
 
 .empty-state {
@@ -86,13 +95,15 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #858585;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
 .loading {
   padding: 16px;
   text-align: center;
-  color: #858585;
+  color: var(--text-secondary);
   font-size: 13px;
 }
+
+/* Theme Toggle Button styles are now in index.css */
